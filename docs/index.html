@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>github-analyzation — Codebase Explainers</title>
+  <meta name="description" content="Cyclone 的 codebase 圖解專區：外部專案分析 HTML visualizer hub。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #071018;
+      --panel: #0e1a24;
+      --line: #1f3a4a;
+      --mint: #3dffa8;
+      --amber: #ffb347;
+      --fog: #c8d6e0;
+      --mute: #7a93a3;
+      --glow: rgba(61, 255, 168, 0.18);
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "IBM Plex Sans", sans-serif;
+      color: var(--fog);
+      background:
+        radial-gradient(1200px 600px at 10% -10%, var(--glow), transparent 55%),
+        radial-gradient(900px 500px at 100% 0%, rgba(255, 179, 71, 0.12), transparent 50%),
+        linear-gradient(180deg, #050b11 0%, var(--ink) 40%, #0a141c 100%);
+    }
+    .wrap { width: min(1100px, 92vw); margin: 0 auto; padding: 4.5rem 0 5rem; }
+    .brand {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.6rem, 7vw, 4.4rem);
+      letter-spacing: -0.04em;
+      line-height: 0.95;
+      margin: 0 0 1rem;
+      background: linear-gradient(120deg, #fff 20%, var(--mint) 70%, var(--amber));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      animation: rise 0.8s ease both;
+    }
+    .lede {
+      max-width: 38rem;
+      font-size: 1.15rem;
+      line-height: 1.55;
+      color: var(--mute);
+      margin: 0 0 2.5rem;
+      animation: rise 0.9s 0.08s ease both;
+    }
+    .meta {
+      display: flex; flex-wrap: wrap; gap: 0.6rem;
+      margin-bottom: 3rem;
+      animation: rise 1s 0.12s ease both;
+    }
+    .chip {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.78rem;
+      border: 1px solid var(--line);
+      background: rgba(14, 26, 36, 0.7);
+      padding: 0.35rem 0.7rem;
+      border-radius: 999px;
+      color: var(--fog);
+    }
+    .chip strong { color: var(--mint); font-weight: 500; }
+    h2 {
+      font-family: Syne, sans-serif;
+      font-size: 1.35rem;
+      margin: 0 0 1rem;
+      letter-spacing: -0.02em;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1rem;
+      animation: rise 1s 0.18s ease both;
+    }
+    a.card {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+      background: linear-gradient(160deg, rgba(20, 40, 52, 0.9), rgba(8, 16, 24, 0.95));
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      padding: 1.35rem 1.4rem 1.5rem;
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    a.card::before {
+      content: "";
+      position: absolute; inset: 0 auto 0 0; width: 3px;
+      background: linear-gradient(180deg, var(--mint), var(--amber));
+      opacity: 0.85;
+    }
+    a.card:hover {
+      transform: translateY(-4px);
+      border-color: #2f5a6e;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(61, 255, 168, 0.12);
+    }
+    .card .kicker {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      color: var(--mint);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      margin-bottom: 0.55rem;
+    }
+    .card h3 {
+      font-family: Syne, sans-serif;
+      font-size: 1.25rem;
+      margin: 0 0 0.55rem;
+      letter-spacing: -0.02em;
+      color: #f4f8fb;
+    }
+    .card p { margin: 0; color: var(--mute); line-height: 1.5; font-size: 0.95rem; }
+    .card .go {
+      margin-top: 1.1rem;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.8rem;
+      color: var(--amber);
+    }
+    .howto {
+      margin-top: 3.5rem;
+      padding: 1.4rem 1.5rem;
+      border: 1px dashed var(--line);
+      border-radius: 1rem;
+      background: rgba(14, 26, 36, 0.45);
+      animation: rise 1.05s 0.22s ease both;
+    }
+    .howto ol { margin: 0.6rem 0 0; padding-left: 1.2rem; color: var(--mute); line-height: 1.7; }
+    .howto code {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.85em;
+      color: var(--mint);
+    }
+    footer {
+      margin-top: 3rem;
+      color: var(--mute);
+      font-size: 0.85rem;
+      animation: rise 1.1s 0.25s ease both;
+    }
+    footer a { color: var(--fog); }
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: none; }
+    }
+  </style>
+</head>
+<body>
+  <main class="wrap">
+    <p class="chip" style="display:inline-block;margin-bottom:1.2rem;">cyclone-tw / <strong>github-analyzation</strong></p>
+    <h1 class="brand">github-analyzation</h1>
+    <p class="lede">專門解釋外部 codebase 的圖解專區。每篇是一份自包含 HTML visualizer：對照來源、架構、章節路徑，方便分享與複習。</p>
+    <div class="meta">
+      <span class="chip">Pages · <strong>/docs</strong></span>
+      <span class="chip">格式 · <strong>analyses/&lt;slug&gt;/</strong></span>
+      <span class="chip">語言 · <strong>zh-Hant + EN names</strong></span>
+    </div>
+
+    <h2>Analyses</h2>
+    <div class="grid">
+      <a class="card" href="./analyses/illustrated-guide-to-ai-agents/">
+        <div class="kicker">LLM Agents · 2026-09</div>
+        <h3>Illustrated Guide to AI Agents</h3>
+        <p>Newsletter 概念地圖 ↔ HandsOnLLM TinyAgent repo：Memory / Tools / Planning 對照與章節路徑。</p>
+        <div class="go">open visualizer →</div>
+      </a>
+    </div>
+
+    <section class="howto" aria-labelledby="howto">
+      <h2 id="howto">新增一篇</h2>
+      <ol>
+        <li>開 issue，寫來源 URL、範圍、驗收。</li>
+        <li>新增 <code>docs/analyses/&lt;slug&gt;/index.html</code>（自包含）。</li>
+        <li>在本 hub 加一張卡片，並更新 repo README 表格。</li>
+        <li>PR 使用 <code>Closes #N</code>；Pages 來源為 <code>main</code> 的 <code>/docs</code>。</li>
+      </ol>
+    </section>
+
+    <footer>
+      Repo: <a href="https://github.com/cyclone-tw/github-analyzation">cyclone-tw/github-analyzation</a>
+    </footer>
+  </main>
+</body>
+</html>

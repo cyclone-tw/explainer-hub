@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Illustrated Guide to AI Agents — Visualizer</title>
+  <meta name="description" content="Newsletter《A Visual Guide to LLM Agents》與 HandsOnLLM TinyAgent repo 的對照圖解。" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Syne:wght@600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #071018;
+      --panel: #0e1a24;
+      --panel-2: #132433;
+      --line: #234556;
+      --mint: #3dffa8;
+      --amber: #ffb347;
+      --sky: #7ec8ff;
+      --fog: #d5e2ea;
+      --mute: #84a0b0;
+      --danger: #ff7a7a;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Sans", sans-serif;
+      color: var(--fog);
+      background:
+        radial-gradient(900px 480px at 0% 0%, rgba(61, 255, 168, 0.12), transparent 55%),
+        radial-gradient(800px 420px at 100% 8%, rgba(126, 200, 255, 0.1), transparent 50%),
+        linear-gradient(180deg, #050b11, var(--ink) 35%, #09141c);
+    }
+    a { color: var(--sky); }
+    .top {
+      position: sticky; top: 0; z-index: 20;
+      backdrop-filter: blur(12px);
+      background: rgba(7, 16, 24, 0.78);
+      border-bottom: 1px solid rgba(35, 69, 86, 0.7);
+    }
+    .top-inner {
+      width: min(1120px, 92vw);
+      margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 1rem; padding: 0.7rem 0;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.78rem;
+    }
+    .top a.back { color: var(--mute); text-decoration: none; }
+    .top a.back:hover { color: var(--mint); }
+    .nav { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+    .nav a { color: var(--mute); text-decoration: none; }
+    .nav a:hover { color: var(--fog); }
+    .wrap { width: min(1120px, 92vw); margin: 0 auto; padding: 2.5rem 0 4.5rem; }
+
+    /* Hero: brand-first, one composition */
+    .hero {
+      min-height: min(78vh, 720px);
+      display: grid;
+      align-content: end;
+      gap: 1.1rem;
+      padding: 2rem 0 3rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-grid {
+      position: absolute; inset: 0;
+      background-image:
+        linear-gradient(rgba(61, 255, 168, 0.05) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(61, 255, 168, 0.05) 1px, transparent 1px);
+      background-size: 48px 48px;
+      mask-image: linear-gradient(180deg, #000 20%, transparent 90%);
+      animation: drift 28s linear infinite;
+      pointer-events: none;
+    }
+    .eyebrow {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.8rem;
+      color: var(--mint);
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      animation: rise 0.7s ease both;
+    }
+    .hero h1 {
+      font-family: Syne, sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.4rem, 7vw, 4.6rem);
+      letter-spacing: -0.045em;
+      line-height: 0.95;
+      margin: 0;
+      max-width: 14ch;
+      animation: rise 0.85s 0.05s ease both;
+    }
+    .hero .sub {
+      max-width: 36rem;
+      font-size: 1.08rem;
+      line-height: 1.55;
+      color: var(--mute);
+      margin: 0;
+      animation: rise 0.9s 0.1s ease both;
+    }
+    .cta-row {
+      display: flex; flex-wrap: wrap; gap: 0.7rem;
+      animation: rise 0.95s 0.15s ease both;
+    }
+    .btn {
+      display: inline-flex; align-items: center; gap: 0.4rem;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.82rem;
+      text-decoration: none;
+      padding: 0.65rem 1rem;
+      border-radius: 0.55rem;
+      border: 1px solid var(--line);
+      transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn-primary { background: var(--mint); color: #04120c; border-color: transparent; font-weight: 500; }
+    .btn-ghost { background: transparent; color: var(--fog); }
+    .btn-ghost:hover { border-color: var(--mint); }
+
+    section { margin: 3.5rem 0; }
+    .sec-title {
+      font-family: Syne, sans-serif;
+      font-size: clamp(1.4rem, 3vw, 1.85rem);
+      letter-spacing: -0.03em;
+      margin: 0 0 0.4rem;
+    }
+    .sec-lead { color: var(--mute); margin: 0 0 1.4rem; max-width: 42rem; line-height: 1.5; }
+
+    .duo {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+    @media (max-width: 780px) { .duo { grid-template-columns: 1fr; } }
+    .pane {
+      background: linear-gradient(165deg, rgba(19, 36, 51, 0.95), rgba(8, 16, 24, 0.92));
+      border: 1px solid var(--line);
+      border-radius: 1rem;
+      padding: 1.25rem 1.3rem 1.4rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .pane.news::after, .pane.repo::after {
+      content: "";
+      position: absolute; top: 0; right: 0; width: 120px; height: 120px;
+      background: radial-gradient(circle at 100% 0%, rgba(61, 255, 168, 0.15), transparent 70%);
+      pointer-events: none;
+    }
+    .pane.repo::after {
+      background: radial-gradient(circle at 100% 0%, rgba(255, 179, 71, 0.18), transparent 70%);
+    }
+    .pane .tag {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--mint);
+      margin-bottom: 0.5rem;
+    }
+    .pane.repo .tag { color: var(--amber); }
+    .pane h3 {
+      font-family: Syne, sans-serif;
+      margin: 0 0 0.55rem;
+      font-size: 1.2rem;
+      letter-spacing: -0.02em;
+    }
+    .pane ul { margin: 0.6rem 0 0; padding-left: 1.1rem; color: var(--mute); line-height: 1.65; }
+    .pane li strong { color: var(--fog); font-weight: 500; }
+
+    .bridge {
+      margin: 1rem 0 0;
+      display: grid;
+      place-items: center;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.85rem;
+      color: var(--sky);
+      gap: 0.35rem;
+    }
+    .bridge .arrow {
+      width: min(100%, 420px);
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--mint), var(--amber), transparent);
+      position: relative;
+      animation: pulse 2.4s ease-in-out infinite;
+    }
+    .verdict {
+      margin-top: 1rem;
+      padding: 1rem 1.15rem;
+      border-left: 3px solid var(--mint);
+      background: rgba(61, 255, 168, 0.06);
+      border-radius: 0 0.75rem 0.75rem 0;
+      line-height: 1.55;
+    }
+
+    .tabs { display: flex; flex-wrap: wrap; gap: 0.45rem; margin-bottom: 1rem; }
+    .tab {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.8rem;
+      background: transparent;
+      color: var(--mute);
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 0.45rem 0.85rem;
+      cursor: pointer;
+    }
+    .tab[aria-selected="true"] {
+      color: #04120c;
+      background: var(--mint);
+      border-color: transparent;
+    }
+    .panel[hidden] { display: none; }
+    .map {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 0.75rem;
+      align-items: stretch;
+    }
+    @media (max-width: 720px) {
+      .map { grid-template-columns: 1fr; }
+      .map .mid { transform: rotate(90deg); justify-self: center; }
+    }
+    .map .side {
+      border: 1px solid var(--line);
+      border-radius: 0.85rem;
+      padding: 1rem;
+      background: var(--panel);
+    }
+    .map .side h4 {
+      margin: 0 0 0.55rem;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--mute);
+    }
+    .map .side p { margin: 0; line-height: 1.55; font-size: 0.95rem; }
+    .map .mid {
+      align-self: center;
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--amber);
+      font-size: 1.4rem;
+    }
+    .codeish {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.82rem;
+      color: var(--mint);
+      display: block;
+      margin-top: 0.55rem;
+    }
+
+    .loop {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 1.2rem;
+      align-items: center;
+    }
+    @media (max-width: 860px) { .loop { grid-template-columns: 1fr; } }
+    .loop svg { width: 100%; height: auto; }
+    .loop-list { margin: 0; padding: 0; list-style: none; }
+    .loop-list li {
+      display: grid;
+      grid-template-columns: 2.2rem 1fr;
+      gap: 0.7rem;
+      padding: 0.7rem 0;
+      border-bottom: 1px solid rgba(35, 69, 86, 0.55);
+    }
+    .loop-list .n {
+      font-family: "IBM Plex Mono", monospace;
+      color: var(--mint);
+      font-size: 0.85rem;
+    }
+    .loop-list strong { display: block; margin-bottom: 0.2rem; }
+    .loop-list span { color: var(--mute); font-size: 0.92rem; line-height: 1.45; }
+
+    .chapters {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 0.55rem;
+    }
+    .ch {
+      border: 1px solid var(--line);
+      border-radius: 0.7rem;
+      padding: 0.75rem 0.8rem;
+      background: rgba(14, 26, 36, 0.8);
+      transition: border-color 0.2s ease, transform 0.2s ease;
+      animation: rise 0.6s ease both;
+    }
+    .ch:hover { border-color: var(--mint); transform: translateY(-2px); }
+    .ch .num {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      color: var(--amber);
+    }
+    .ch .name { font-size: 0.92rem; margin-top: 0.25rem; font-weight: 500; }
+
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 0.85rem; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+    th, td { padding: 0.75rem 0.9rem; text-align: left; border-bottom: 1px solid rgba(35, 69, 86, 0.55); vertical-align: top; }
+    th {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--mute);
+      background: rgba(14, 26, 36, 0.9);
+    }
+    tr:last-child td { border-bottom: 0; }
+    td code {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.82em;
+      color: var(--mint);
+    }
+
+    .pros {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 1rem;
+    }
+    @media (max-width: 720px) { .pros { grid-template-columns: 1fr; } }
+    .pros h3 { margin: 0 0 0.5rem; font-family: Syne, sans-serif; font-size: 1.05rem; }
+    .pros ul { margin: 0; padding-left: 1.1rem; color: var(--mute); line-height: 1.65; }
+
+    .footer {
+      margin-top: 3rem;
+      padding-top: 1.2rem;
+      border-top: 1px solid var(--line);
+      color: var(--mute);
+      font-size: 0.85rem;
+      display: flex; flex-wrap: wrap; gap: 1rem; justify-content: space-between;
+    }
+
+    @keyframes rise {
+      from { opacity: 0; transform: translateY(14px); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes drift {
+      from { transform: translateY(0); }
+      to { transform: translateY(48px); }
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.45; }
+      50% { opacity: 1; }
+    }
+    @keyframes dash {
+      to { stroke-dashoffset: 0; }
+    }
+    .flow-path {
+      stroke-dasharray: 180;
+      stroke-dashoffset: 180;
+      animation: dash 2.2s ease forwards infinite;
+      animation-delay: 0.4s;
+    }
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="top-inner">
+      <a class="back" href="../../">← github-analyzation</a>
+      <nav class="nav" aria-label="頁內導覽">
+        <a href="#pair">對照</a>
+        <a href="#map">零件對映</a>
+        <a href="#tinyagent">TinyAgent</a>
+        <a href="#chapters">章節</a>
+        <a href="#use">何時用</a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero" aria-label="hero">
+      <div class="hero-grid" aria-hidden="true"></div>
+      <p class="eyebrow">codebase explainer · LLM agents</p>
+      <h1>Illustrated Guide to AI Agents</h1>
+      <p class="sub">把 Maarten 的圖解 newsletter（why）對上 HandsOnLLM 的 TinyAgent 教材 repo（how）：同一條 Agent 心智模型，兩種載體。</p>
+      <div class="cta-row">
+        <a class="btn btn-primary" href="https://newsletter.maartengrootendorst.com/p/a-visual-guide-to-llm-agents" target="_blank" rel="noopener">Newsletter</a>
+        <a class="btn btn-ghost" href="https://github.com/HandsOnLLM/An-Illustrated-Guide-To-AI-Agents" target="_blank" rel="noopener">GitHub repo</a>
+      </div>
+    </section>
+
+    <section id="pair">
+      <h2 class="sec-title">兩個來源，一條主線</h2>
+      <p class="sec-lead">第一個連結不是 GitHub codebase，是 Substack 圖解長文；第二個才是 O'Reilly 書配套碼庫。兩者是「概念地圖 → 動手組裝」。</p>
+      <div class="duo">
+        <article class="pane news">
+          <div class="tag">Source A · Newsletter · 2025-03</div>
+          <h3>A Visual Guide to LLM Agents</h3>
+          <ul>
+            <li><strong>形式</strong>：約 60+ 自訂圖的長文</li>
+            <li><strong>目標</strong>：講清 Agent 是什麼、有哪些零件</li>
+            <li><strong>主軸</strong>：Memory · Tools · Planning · Multi-Agent</li>
+            <li><strong>產出</strong>：心智模型，無可 clone runtime</li>
+          </ul>
+        </article>
+        <article class="pane repo">
+          <div class="tag">Source B · Repo · 2026</div>
+          <h3>An-Illustrated-Guide-To-AI-Agents</h3>
+          <ul>
+            <li><strong>形式</strong>：Jupyter + PyPI <code>illustrated-agents</code></li>
+            <li><strong>目標</strong>：從零組出可跑的 <code>TinyAgent</code></li>
+            <li><strong>主軸</strong>：每章加一塊模組（memory / tools / ReAct…）</li>
+            <li><strong>產出</strong>：可 Colab／本機跑的教學 runtime</li>
+          </ul>
+        </article>
+      </div>
+      <div class="bridge" aria-hidden="true">
+        <span>why → how</span>
+        <div class="arrow"></div>
+        <span>newsletter concepts · TinyAgent modules</span>
+      </div>
+      <p class="verdict"><strong>一句話：</strong>Newsletter 定義 Augmented LLM 與 agentic 程度；repo 用純 Python（OpenAI-compatible endpoint）把 Memory / Tools / Planning 嵌進同一個 autonomy loop。</p>
+    </section>
+
+    <section id="map">
+      <h2 class="sec-title">零件對映：點選切換</h2>
+      <p class="sec-lead">把 newsletter 三大件對到 repo 實際類別與章節。點 tab 看細節。</p>
+      <div class="tabs" role="tablist" aria-label="零件">
+        <button class="tab" role="tab" id="tab-mem" aria-selected="true" aria-controls="panel-mem">Memory</button>
+        <button class="tab" role="tab" id="tab-tools" aria-selected="false" aria-controls="panel-tools">Tools</button>
+        <button class="tab" role="tab" id="tab-plan" aria-selected="false" aria-controls="panel-plan">Planning</button>
+        <button class="tab" role="tab" id="tab-multi" aria-selected="false" aria-controls="panel-multi">Multi-Agent</button>
+      </div>
+
+      <div class="panel" id="panel-mem" role="tabpanel" aria-labelledby="tab-mem">
+        <div class="map">
+          <div class="side">
+            <h4>Newsletter</h4>
+            <p>Short-term：塞 context 或 LLM 摘要。Long-term：向量庫 + RAG。對應 CoALA 式記憶分類。</p>
+          </div>
+          <div class="mid">→</div>
+          <div class="side">
+            <h4>Repo · Ch4</h4>
+            <p><code>Memory</code>、<code>TrimmingMemory</code>、<code>SummarizationMemory</code>、<code>LongTermMemory</code>（embedding + cosine）。</p>
+            <span class="codeish">src/illustrated_agents/memory.py</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-tools" role="tabpanel" aria-labelledby="tab-tools" hidden>
+        <div class="map">
+          <div class="side">
+            <h4>Newsletter</h4>
+            <p>Function calling（JSON）、Toolformer、MCP Host/Client/Server 標準化接線。</p>
+          </div>
+          <div class="mid">→</div>
+          <div class="side">
+            <h4>Repo · Ch5</h4>
+            <p><code>Tools</code> / <code>NativeTools</code>、MCP notebooks、<code>Skills</code>（<code>SKILL.md</code>）。</p>
+            <span class="codeish">tools.py · mcp.py · chapter05_*.ipynb</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-plan" role="tabpanel" aria-labelledby="tab-plan" hidden>
+        <div class="map">
+          <div class="side">
+            <h4>Newsletter</h4>
+            <p>CoT → ReAct（Thought/Action/Observation）→ Reflexion / SELF-REFINE。</p>
+          </div>
+          <div class="mid">→</div>
+          <div class="side">
+            <h4>Repo · Ch6</h4>
+            <p><code>ReAct</code>（regex parse）、<code>NativeReAct</code>、<code>PlanAndSolve</code>、<code>Reflexion</code>。</p>
+            <span class="codeish">src/illustrated_agents/planning.py</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="panel" id="panel-multi" role="tabpanel" aria-labelledby="tab-multi" hidden>
+        <div class="map">
+          <div class="side">
+            <h4>Newsletter</h4>
+            <p>Generative Agents、CAMEL、AutoGen、MetaGPT：初始化 + 編排。</p>
+          </div>
+          <div class="mid">→</div>
+          <div class="side">
+            <h4>Repo · Ch8</h4>
+            <p>多代理協作教學章；目標是理解框架，不是再發明 production orchestrator。</p>
+            <span class="codeish">chapter08/chapter08.ipynb</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="tinyagent">
+      <h2 class="sec-title">TinyAgent autonomy loop</h2>
+      <p class="sec-lead">核心在 <code>agent.py</code>：模組邊界清楚，迴圈就是 Thought → parse → Action → Observation，直到 <code>final_answer</code>。</p>
+      <div class="loop">
+        <svg viewBox="0 0 520 360" role="img" aria-label="TinyAgent loop diagram">
+          <defs>
+            <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#3dffa8" />
+            </marker>
+          </defs>
+          <rect x="20" y="20" width="480" height="320" rx="18" fill="#0e1a24" stroke="#234556" />
+          <rect x="170" y="40" width="180" height="54" rx="12" fill="#132433" stroke="#3dffa8" />
+          <text x="260" y="73" text-anchor="middle" fill="#d5e2ea" font-family="IBM Plex Sans" font-size="15">LLM.generate</text>
+          <path class="flow-path" d="M260 94 L260 118" stroke="#3dffa8" stroke-width="2" marker-end="url(#arrow)" fill="none" />
+          <rect x="150" y="120" width="220" height="54" rx="12" fill="#132433" stroke="#7ec8ff" />
+          <text x="260" y="153" text-anchor="middle" fill="#d5e2ea" font-family="IBM Plex Sans" font-size="15">planner.parse · tools.parse</text>
+          <path class="flow-path" d="M260 174 L260 198" stroke="#7ec8ff" stroke-width="2" marker-end="url(#arrow)" fill="none" style="animation-delay:0.8s" />
+          <rect x="150" y="200" width="220" height="54" rx="12" fill="#132433" stroke="#ffb347" />
+          <text x="260" y="233" text-anchor="middle" fill="#d5e2ea" font-family="IBM Plex Sans" font-size="15">tools.execute</text>
+          <path class="flow-path" d="M150 227 L70 227 L70 67 L170 67" stroke="#ffb347" stroke-width="2" fill="none" marker-end="url(#arrow)" style="animation-delay:1.2s" />
+          <text x="52" y="150" fill="#84a0b0" font-family="IBM Plex Mono" font-size="11" transform="rotate(-90 52 150)">OBSERVATION → memory</text>
+          <rect x="190" y="280" width="140" height="40" rx="10" fill="#3dffa8" />
+          <text x="260" y="305" text-anchor="middle" fill="#04120c" font-family="IBM Plex Mono" font-size="13">final_answer</text>
+          <path d="M260 254 L260 278" stroke="#3dffa8" stroke-width="2" marker-end="url(#arrow)" fill="none" />
+        </svg>
+        <ol class="loop-list">
+          <li><span class="n">01</span><div><strong>memory.add(user)</strong><span>寫入任務；可帶 image（Ch9 multimodal）。</span></div></li>
+          <li><span class="n">02</span><div><strong>LLM.generate</strong><span>純 <code>urllib</code> 打 OpenAI-compatible <code>/chat/completions</code>；可掛 tools schema。</span></div></li>
+          <li><span class="n">03</span><div><strong>parse</strong><span>文字 JSON 的 ReAct，或原生 <code>tool_calls</code> 的 NativeReAct。</span></div></li>
+          <li><span class="n">04</span><div><strong>execute → observe</strong><span>結果回寫 memory；trajectory 記錄步驟；達 max_steps 或 final_answer 結束。</span></div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section id="chapters">
+      <h2 class="sec-title">章節路線圖</h2>
+      <p class="sec-lead">建議順序：先 newsletter 心智模型，再 Ch1→Ch10。Ch5 / Ch6 有多本 notebook，照 README 順序走。</p>
+      <div class="chapters" id="chapter-grid"></div>
+    </section>
+
+    <section>
+      <h2 class="sec-title">概念 ↔ 實作速查</h2>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr><th>Newsletter</th><th>Repo 落地</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Augmented LLM</td><td><code>LLM</code> + tools + memory</td></tr>
+            <tr><td>Short / long-term memory</td><td>Trimming / Summarization / LongTermMemory</td></tr>
+            <tr><td>Function calling &amp; MCP</td><td>Ch5 Tools · MCP · Skills</td></tr>
+            <tr><td>ReAct</td><td><code>ReAct</code> prompt + regex parse</td></tr>
+            <tr><td>Reflexion</td><td><code>Reflexion.reflect()</code> 每 N 步注入矯正</td></tr>
+            <tr><td>Coding agent</td><td>Ch10：讀寫檔 + <code>execute_python</code> CLI</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="use">
+      <h2 class="sec-title">強項、限制、建議用法</h2>
+      <div class="pros">
+        <article class="pane">
+          <h3>強項</h3>
+          <ul>
+            <li>圖解 + 模組化，學習曲線平緩</li>
+            <li>真的從零組，不是只包框架</li>
+            <li>涵蓋 MCP、native tool calling、skills、coding agent</li>
+            <li>Colab 免費路徑清楚</li>
+          </ul>
+        </article>
+        <article class="pane">
+          <h3>限制</h3>
+          <ul>
+            <li>教材型 runtime，非 production orchestration</li>
+            <li>評測／多代理章相對輕</li>
+            <li><code>execute_python</code> 有 timeout，非完整 sandbox 敘事</li>
+            <li>教學迭代痕跡（偶有重複命名）</li>
+          </ul>
+        </article>
+      </div>
+      <p class="verdict" style="margin-top:1rem;"><strong>建議：</strong>當「底層原理課」。產品多代理再接 CrewAI / AutoGen / 自家 orchestrator。讀完 newsletter → 跑 Ch1–10 → 對照自己系統的 memory / tools / planner 邊界。</p>
+    </section>
+
+    <footer class="footer">
+      <span>hub · <a href="../../">github-analyzation</a></span>
+      <span>Closes cyclone-tw/github-analyzation#1 · 2026-09-25</span>
+    </footer>
+  </main>
+
+  <script>
+    const chapters = [
+      ["01", "Introduction"],
+      ["02", "Large Language Models"],
+      ["03", "Reasoning LLMs"],
+      ["04", "Memory"],
+      ["05", "Tools & MCP"],
+      ["06", "Planning"],
+      ["07", "Evaluation"],
+      ["08", "Multi-Agent"],
+      ["09", "Multimodal"],
+      ["10", "Coding Agents"],
+    ];
+    const grid = document.getElementById("chapter-grid");
+    chapters.forEach(([num, name], i) => {
+      const el = document.createElement("div");
+      el.className = "ch";
+      el.style.animationDelay = `${0.04 * i}s`;
+      el.innerHTML = `<div class="num">Ch ${num}</div><div class="name">${name}</div>`;
+      grid.appendChild(el);
+    });
+
+    const tabs = [...document.querySelectorAll('[role="tab"]')];
+    const panels = {
+      "tab-mem": "panel-mem",
+      "tab-tools": "panel-tools",
+      "tab-plan": "panel-plan",
+      "tab-multi": "panel-multi",
+    };
+    tabs.forEach((tab) => {
+      tab.addEventListener("click", () => {
+        tabs.forEach((t) => t.setAttribute("aria-selected", "false"));
+        tab.setAttribute("aria-selected", "true");
+        Object.values(panels).forEach((id) => {
+          document.getElementById(id).hidden = true;
+        });
+        document.getElementById(panels[tab.id]).hidden = false;
+      });
+    });
+  </script>
+</body>
+</html>
