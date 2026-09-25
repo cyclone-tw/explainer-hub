@@ -1,0 +1,2480 @@
+<!doctype html>
+<html lang="zh-TW">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>這兩週：用說明頁看懂自己在開發什麼</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      :root {
+        --wrap-max: 1760px; /* 內容寬度：設定檔 tokens.layout.maxWidth 與「風格設定」改的就是它 */
+        --ivory: #faf9f5;
+        --paper: #ffffff;
+        --slate: #141413;
+        --clay: #d97757;
+        --clay-d: #b85c3e;
+        --clay-soft: #fbe9df;
+        --oat: #e3dacc;
+        --olive: #788c5d;
+        --olive-soft: #eff1e8;
+        --olive-border: #c8d2b8;
+        --g100: #f0eee6;
+        --g200: #e6e3da;
+        --g300: #d1cfc5;
+        --g500: #87867f;
+        --g700: #3d3d3a;
+        --green: #788c5d;
+        --green-soft: #eff1e8;
+        --green-border: #c8d2b8;
+        --red: #b85c3e;
+        --red-soft: #faebe3;
+        --red-border: #e8c4af;
+        --yellow: #c49845;
+        --yellow-soft: #f8efd9;
+        --yellow-border: #e8d4a0;
+        --bg: var(--ivory);
+        --bg-card: var(--paper);
+        --bg-soft: var(--g100);
+        --bg-soft-2: var(--g200);
+        --border: var(--g300);
+        --border-strong: var(--g500);
+        --text: var(--slate);
+        --text-muted: var(--g700);
+        --text-soft: var(--g500);
+        --accent: var(--clay);
+        --accent-soft: var(--clay-soft);
+        --serif: ui-serif, Georgia, "Times New Roman", Times, serif;
+        --sans:
+          system-ui, -apple-system, "Segoe UI", "PingFang TC", "Noto Sans TC",
+          Roboto, Helvetica, Arial, sans-serif;
+        --mono: ui-monospace, "SF Mono", Menlo, Monaco, Consolas, monospace;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        font-size: calc(16px * var(--fs, 1));
+        line-height: 1.6;
+        -webkit-font-smoothing: antialiased;
+        font-synthesis: none;
+      }
+      h1,
+      h2,
+      h3,
+      h4 {
+        font-family: var(--serif);
+        font-weight: 500;
+        color: var(--slate);
+        letter-spacing: -0.012em;
+        margin: 0;
+      }
+      /* 中文強調不用斜體 —— 漢字沒有義大利體，瀏覽器只能機械傾斜、筆畫變形。
+         B 換字重（此處）／ C 螢光筆（.hl）／ E 保險絲（body font-synthesis）。
+         完整規則見 references/color-and-typography.md */
+      p,
+      li,
+      td {
+        text-wrap: pretty;
+      }
+      h1,
+      h2,
+      h3 {
+        text-wrap: balance;
+      }
+      h1 em,
+      h2 em,
+      h3 em {
+        font-style: normal;
+        font-weight: 700;
+        color: var(--clay);
+      }
+      .hl {
+        background: linear-gradient(transparent 58%, #f7d9a0 58%);
+        font-style: normal;
+      }
+      /* 內文的 <em>：保險絲擋掉合成斜體後，中文 em 會跟正文一模一樣（強調消失）。
+         補字重讓它看得出來；英文字體有真的義大利體，斜體照樣保留。
+         （標題的 em 另有 700 ＋ clay，選擇器較具體、不受這條影響） */
+      em {
+        font-weight: 600;
+      }
+      p {
+        max-width: 72ch;
+      }
+      .wrap {
+        width: min(94vw, var(--wrap-max, 1760px));
+        margin: 0 auto;
+        padding: 0 calc(32px * var(--dens, 1));
+      }
+
+      /* ── Anthropic signature ── */
+      .eyebrow {
+        font-family: var(--mono);
+        font-size: calc(11.5px * var(--fs, 1));
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: var(--g500);
+        display: flex;
+        align-items: center;
+        gap: calc(12px * var(--dens, 1));
+      }
+      .eyebrow::before {
+        content: "";
+        width: 24px;
+        height: 1.5px;
+        background: var(--clay);
+        flex-shrink: 0;
+      }
+      .card {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border);
+        border-radius: 14px;
+      }
+      .card-soft {
+        background: var(--bg-soft);
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+      }
+      .sec-head {
+        display: flex;
+        align-items: flex-start;
+        gap: calc(14px * var(--dens, 1));
+        margin-bottom: calc(20px * var(--dens, 1));
+      }
+      .sec-idx {
+        font-family: var(--mono);
+        font-size: calc(13px * var(--fs, 1));
+        font-weight: 600;
+        color: var(--clay-d);
+        background: var(--clay-soft);
+        border: 1.5px solid var(--clay);
+        border-radius: 8px;
+        width: 36px;
+        height: 36px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      .sec-sub {
+        font-size: calc(13.5px * var(--fs, 1));
+        color: var(--text-soft);
+        margin-top: calc(3px * var(--dens, 1));
+      }
+      .toc {
+        display: flex;
+        flex-wrap: wrap;
+        gap: calc(8px * var(--dens, 1));
+        margin-top: calc(26px * var(--dens, 1));
+      }
+      .toc a {
+        font-size: calc(13px * var(--fs, 1));
+        padding: calc(6px * var(--dens, 1)) calc(15px * var(--dens, 1));
+        border: 1.5px solid var(--border);
+        border-radius: 999px;
+        color: var(--text-muted);
+        text-decoration: none;
+        transition: all 0.15s;
+        background: var(--paper);
+      }
+      .toc a:hover {
+        border-color: var(--slate);
+        color: var(--slate);
+      }
+      .toc a .n {
+        font-family: var(--mono);
+        font-size: calc(10.5px * var(--fs, 1));
+        color: var(--text-soft);
+        margin-right: calc(6px * var(--dens, 1));
+      }
+      .highlight-box {
+        background: var(--clay-soft);
+        border-left: 3px solid var(--clay);
+        padding: calc(13px * var(--dens, 1)) calc(17px * var(--dens, 1));
+        border-radius: 6px;
+        font-size: calc(13.5px * var(--fs, 1));
+      }
+      .highlight-box.green {
+        background: var(--green-soft);
+        border-left-color: var(--green);
+      }
+      .stat-card {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        padding: calc(18px * var(--dens, 1));
+      }
+      .stat-label {
+        font-family: var(--mono);
+        font-size: calc(10.5px * var(--fs, 1));
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+      }
+      .stat-value {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: calc(30px * var(--fs, 1));
+        color: var(--clay);
+        margin-top: calc(4px * var(--dens, 1));
+        line-height: 1.1;
+      }
+      .stat-sub {
+        font-size: calc(12.5px * var(--fs, 1));
+        color: var(--text-muted);
+        margin-top: calc(4px * var(--dens, 1));
+      }
+      footer.k-mark {
+        margin-top: calc(40px * var(--dens, 1));
+        padding: calc(36px * var(--dens, 1)) 0;
+        text-align: center;
+        border-top: 1.5px solid var(--border);
+      }
+      footer.k-mark .glyph {
+        font-family: var(--serif);
+        font-style: italic;
+        font-size: calc(28px * var(--fs, 1));
+        color: var(--clay);
+      }
+      footer.k-mark .meta {
+        font-family: var(--mono);
+        font-size: calc(11px * var(--fs, 1));
+        color: var(--g500);
+        margin-top: calc(12px * var(--dens, 1));
+        text-transform: uppercase;
+        letter-spacing: 0.1em;
+      }
+
+      /* ── 解釋類元件：定義卡 ── */
+      .def-card {
+        background: var(--bg-card);
+        border: 1.5px solid var(--border);
+        border-left: 3px solid var(--clay);
+        border-radius: 10px;
+        padding: calc(16px * var(--dens, 1)) calc(20px * var(--dens, 1));
+      }
+      .def-term {
+        font-family: var(--serif);
+        font-size: calc(17px * var(--fs, 1));
+        font-weight: 500;
+        color: var(--slate);
+      }
+      .def-term .orig {
+        font-family: var(--mono);
+        font-size: calc(11.5px * var(--fs, 1));
+        color: var(--text-soft);
+        margin-left: calc(8px * var(--dens, 1));
+      }
+      .def-oneliner {
+        font-size: calc(15px * var(--fs, 1));
+        color: var(--slate);
+        margin-top: calc(6px * var(--dens, 1));
+        line-height: 1.6;
+      }
+      .def-oneliner em {
+        font-style: italic;
+        color: var(--clay-d);
+      }
+      .def-detail {
+        font-size: calc(13px * var(--fs, 1));
+        color: var(--text-muted);
+        margin-top: calc(10px * var(--dens, 1));
+        padding-top: calc(10px * var(--dens, 1));
+        border-top: 1px dashed var(--border);
+        line-height: 1.6;
+      }
+
+      /* ── 解釋類元件：類比橋 ── */
+      .analogy {
+        background: var(--olive-soft);
+        border: 1.5px solid var(--olive-border);
+        border-radius: 12px;
+        padding: calc(18px * var(--dens, 1)) calc(22px * var(--dens, 1));
+      }
+      .analogy-head {
+        font-family: var(--serif);
+        font-size: calc(16px * var(--fs, 1));
+        color: #46552f;
+        margin-bottom: calc(14px * var(--dens, 1));
+      }
+      .analogy-head em {
+        font-style: italic;
+        font-weight: 500;
+      }
+      .analogy-row {
+        display: grid;
+        grid-template-columns: 1fr 34px 1fr;
+        align-items: center;
+        gap: calc(8px * var(--dens, 1));
+        padding: calc(7px * var(--dens, 1)) 0;
+        border-top: 1px solid var(--olive-border);
+        font-size: calc(13.5px * var(--fs, 1));
+      }
+      .analogy-row .known {
+        color: var(--text-muted);
+      }
+      .analogy-row .arrow {
+        text-align: center;
+        color: var(--olive);
+        font-size: calc(12px * var(--fs, 1));
+      }
+      .analogy-row .target {
+        font-weight: 600;
+        color: var(--slate);
+      }
+      .analogy-limit {
+        margin-top: calc(14px * var(--dens, 1));
+        padding: calc(10px * var(--dens, 1)) calc(13px * var(--dens, 1));
+        background: var(--yellow-soft);
+        border: 1px solid var(--yellow-border);
+        border-radius: 8px;
+        font-size: calc(12.5px * var(--fs, 1));
+        color: #6b4d10;
+        line-height: 1.55;
+      }
+
+      /* ── 解釋類元件：分層剖面 ── */
+      .layers {
+        display: flex;
+        flex-direction: column;
+        gap: calc(3px * var(--dens, 1));
+      }
+      .layer {
+        display: grid;
+        grid-template-columns: 160px 1fr auto;
+        align-items: center;
+        gap: calc(14px * var(--dens, 1));
+        padding: calc(13px * var(--dens, 1)) calc(18px * var(--dens, 1));
+        background: var(--bg-card);
+        border: 1.5px solid var(--border);
+        font-size: calc(13.5px * var(--fs, 1));
+      }
+      .layer:first-child {
+        border-radius: 10px 10px 4px 4px;
+      }
+      .layer:last-child {
+        border-radius: 4px 4px 10px 10px;
+      }
+      .layer .name {
+        font-weight: 600;
+        color: var(--slate);
+      }
+      .layer .role {
+        color: var(--text-muted);
+      }
+      .layer .tag {
+        font-family: var(--mono);
+        font-size: calc(10.5px * var(--fs, 1));
+        color: var(--text-soft);
+      }
+      .layer.emph {
+        border-color: var(--clay);
+        background: var(--clay-soft);
+      }
+      .layer.emph .tag {
+        color: var(--clay-d);
+        font-weight: 600;
+      }
+      .layer.dim {
+        opacity: 0.55;
+      }
+
+      /* ── 解釋類元件：時序圖 ── */
+      .seq {
+        --lanes: 3;
+        background: var(--bg-card);
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        padding: calc(16px * var(--dens, 1)) calc(18px * var(--dens, 1)) calc(20px * var(--dens, 1));
+      }
+      .seq-actors {
+        display: grid;
+        grid-template-columns: repeat(var(--lanes), 1fr);
+        gap: calc(8px * var(--dens, 1));
+        margin-bottom: calc(12px * var(--dens, 1));
+      }
+      .seq-actor {
+        text-align: center;
+        font-size: calc(12.5px * var(--fs, 1));
+        font-weight: 600;
+        padding: calc(7px * var(--dens, 1)) calc(6px * var(--dens, 1));
+        background: var(--bg-soft);
+        border: 1.5px solid var(--border);
+        border-radius: 8px;
+      }
+      .seq-body {
+        position: relative;
+        display: grid;
+        grid-template-columns: repeat(var(--lanes), 1fr);
+        row-gap: calc(9px * var(--dens, 1));
+      }
+      .seq-lane {
+        position: absolute;
+        top: 0;
+        bottom: 0;
+        width: 1.5px;
+        background: repeating-linear-gradient(
+          180deg,
+          var(--border) 0 5px,
+          transparent 5px 11px
+        );
+        left: calc((var(--i) + 0.5) * 100% / var(--lanes));
+      }
+      .seq-msg {
+        position: relative;
+        z-index: 1;
+        font-size: calc(12.5px * var(--fs, 1));
+        padding: calc(7px * var(--dens, 1)) calc(12px * var(--dens, 1));
+        background: var(--bg-card);
+        border: 1.5px solid var(--border-strong);
+        border-radius: 7px;
+        text-align: center;
+        grid-column: var(--from) / var(--to);
+      }
+      .seq-msg.back {
+        border-style: dashed;
+      }
+      .seq-msg.ok {
+        border-color: var(--green);
+        background: var(--green-soft);
+        color: #2d4a1c;
+      }
+      .seq-msg.fail {
+        border-color: var(--red);
+        background: var(--red-soft);
+        color: var(--red);
+      }
+      .seq-msg .dir {
+        font-family: var(--mono);
+        font-size: calc(10px * var(--fs, 1));
+        color: var(--text-soft);
+        margin-right: calc(6px * var(--dens, 1));
+      }
+
+      /* ── 狀態演進（垂直流程 + mock）── */
+      .steps {
+        position: relative;
+        padding-left: calc(34px * var(--dens, 1));
+      }
+      .steps::before {
+        content: "";
+        position: absolute;
+        left: 11px;
+        top: 6px;
+        bottom: 6px;
+        width: 2px;
+        background: var(--border);
+      }
+      .step {
+        position: relative;
+        margin-bottom: calc(18px * var(--dens, 1));
+      }
+      .step::before {
+        content: "";
+        position: absolute;
+        left: -29px;
+        top: 6px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--clay);
+        border: 2.5px solid var(--bg);
+        box-shadow: 0 0 0 1.5px var(--clay);
+      }
+      .step-title {
+        font-family: var(--serif);
+        font-size: calc(15.5px * var(--fs, 1));
+      }
+      .step-desc {
+        font-size: calc(13px * var(--fs, 1));
+        color: var(--text-muted);
+        margin-top: calc(2px * var(--dens, 1));
+      }
+      .mock {
+        background: var(--bg-soft);
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        padding: calc(13px * var(--dens, 1)) calc(15px * var(--dens, 1));
+        margin-top: calc(10px * var(--dens, 1));
+        position: relative;
+      }
+      .mock-label {
+        position: absolute;
+        top: -8px;
+        left: 12px;
+        background: var(--bg-card);
+        font-family: var(--mono);
+        font-size: calc(10px * var(--fs, 1));
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-soft);
+        padding: calc(2px * var(--dens, 1)) calc(8px * var(--dens, 1));
+        border: 1px solid var(--border);
+        border-radius: 3px;
+      }
+      .tokrow {
+        display: flex;
+        align-items: center;
+        gap: calc(10px * var(--dens, 1));
+        font-size: calc(12.5px * var(--fs, 1));
+        padding: calc(5px * var(--dens, 1)) 0;
+      }
+      .tokrow .k {
+        font-family: var(--mono);
+        font-size: calc(11px * var(--fs, 1));
+        color: var(--text-soft);
+        width: 92px;
+        flex-shrink: 0;
+      }
+      .tokchip {
+        font-family: var(--mono);
+        font-size: calc(11px * var(--fs, 1));
+        padding: calc(2px * var(--dens, 1)) calc(9px * var(--dens, 1));
+        border-radius: 4px;
+        border: 1px solid var(--border);
+        background: var(--paper);
+        color: var(--text-muted);
+      }
+      .tokchip.live {
+        border-color: var(--green-border);
+        background: var(--green-soft);
+        color: var(--green);
+      }
+      .tokchip.dead {
+        border-color: var(--red-border);
+        background: var(--red-soft);
+        color: var(--red);
+        text-decoration: line-through;
+      }
+      .tokchip.none {
+        opacity: 0.5;
+      }
+
+      /* ── 誤解破解（左紅右綠）── */
+      .myth {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        border: 1.5px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      @media (max-width: 900px) {
+        .myth {
+          grid-template-columns: 1fr;
+        }
+      }
+      /* 三欄在手機只剩約 35px 給說明欄，中文會被壓成直排 */
+      @media (max-width: 600px) {
+        .layer {
+          grid-template-columns: 1fr;
+          gap: calc(6px * var(--dens, 1));
+        }
+      }
+      .myth > div {
+        padding: calc(16px * var(--dens, 1)) calc(20px * var(--dens, 1));
+      }
+      .myth .m-wrong {
+        background: var(--red-soft);
+      }
+      .myth .m-right {
+        background: var(--green-soft);
+        border-left: 1.5px solid var(--border);
+      }
+      .myth .h {
+        font-family: var(--mono);
+        font-size: calc(10.5px * var(--fs, 1));
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        margin-bottom: calc(8px * var(--dens, 1));
+      }
+      .myth .m-wrong .h {
+        color: var(--red);
+      }
+      .myth .m-right .h {
+        color: var(--green);
+      }
+      .myth .body {
+        font-size: calc(13.5px * var(--fs, 1));
+        line-height: 1.65;
+        color: var(--slate);
+      }
+
+      /* ── 邊界卡 ── */
+      .bound {
+        display: grid;
+        grid-template-columns: 26px 1fr;
+        gap: calc(12px * var(--dens, 1));
+        padding: calc(13px * var(--dens, 1)) calc(16px * var(--dens, 1));
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg-card);
+        font-size: calc(13.5px * var(--fs, 1));
+      }
+      .bound .ico {
+        font-family: var(--mono);
+        font-weight: 700;
+        color: var(--yellow);
+        text-align: center;
+      }
+      .bound b {
+        display: block;
+        margin-bottom: calc(2px * var(--dens, 1));
+      }
+      .bound .why {
+        color: var(--text-muted);
+        font-size: calc(12.5px * var(--fs, 1));
+      }
+
+      /* ── 漸進揭露 ── */
+      .reveal {
+        border: 1.5px solid var(--border);
+        border-radius: 10px;
+        background: var(--bg-card);
+        margin-top: calc(12px * var(--dens, 1));
+        overflow: hidden;
+      }
+      .reveal > summary {
+        cursor: pointer;
+        padding: calc(12px * var(--dens, 1)) calc(16px * var(--dens, 1));
+        font-size: calc(13.5px * var(--fs, 1));
+        color: var(--text-muted);
+        display: flex;
+        align-items: center;
+        gap: calc(10px * var(--dens, 1));
+        list-style: none;
+        transition: background 0.15s;
+      }
+      .reveal > summary::-webkit-details-marker {
+        display: none;
+      }
+      .reveal > summary::before {
+        content: "▸";
+        color: var(--clay);
+        font-size: calc(11px * var(--fs, 1));
+        transition: transform 0.18s;
+        flex-shrink: 0;
+      }
+      .reveal[open] > summary::before {
+        transform: rotate(90deg);
+      }
+      .reveal > summary:hover {
+        background: var(--bg-soft);
+        color: var(--text);
+      }
+      .reveal > summary .tag {
+        margin-left: auto;
+        font-family: var(--mono);
+        font-size: calc(10px * var(--fs, 1));
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-soft);
+      }
+      .reveal-body {
+        padding: calc(4px * var(--dens, 1)) calc(18px * var(--dens, 1)) calc(18px * var(--dens, 1));
+        font-size: calc(13.5px * var(--fs, 1));
+        line-height: 1.7;
+        color: var(--text-muted);
+        border-top: 1px dashed var(--border);
+      }
+      .reveal-body p {
+        max-width: 72ch;
+      }
+          /* ── 手機：收掉桌機的水平留白 ─────────────────
+         390px 螢幕上，容器左右各 32px 的內距加上 94vw 的寬度限制，
+         會吃掉兩成多的寬度。桌機上那是呼吸空間，手機上是純損失。 */
+      @media (max-width: 640px) {
+        .wrap {
+          width: 100%;
+          padding-left: calc(14px * var(--dens, 1));
+          padding-right: calc(14px * var(--dens, 1));
+        }
+        ul,
+        ol {
+          padding-left: calc(20px * var(--dens, 1));
+        }
+      }
+    </style>
+  <style id="vt-profile" data-profile-hash="da39a3ee5e"></style>
+</head>
+  <body>
+    <!-- ════════ Masthead ════════ -->
+    <header style="border-bottom: 1.5px solid var(--border)">
+      <div class="wrap" style="padding-top: calc(46px * var(--dens, 1)); padding-bottom: calc(34px * var(--dens, 1))">
+        <div class="eyebrow">兩週分享 · 2026-09-25 · 還在試</div>
+        <h1 style="font-size: calc(clamp(34px, 4.6vw, 56px) * var(--fs, 1)); margin-top: calc(14px * var(--dens, 1))">
+          看不懂的程式，先變成<span style="color: var(--clay-d)">一頁我讀得懂的說明</span>
+        </h1>
+        <p style="font-size: calc(16.5px * var(--fs, 1)); color: var(--text-muted); margin-top: calc(14px * var(--dens, 1)); line-height: 1.7; max-width: 72ch">
+          這兩週最有感的是 ORCA：手機經 Relay 可以叫 Mac 和 Mac mini 繼續寫，也能很快開出互不干擾的工作桌。看不懂的地方，再用說明頁讀。
+        </p>
+        <nav class="toc">
+          <a href="#what"><span class="n">01</span>一句話</a>
+          <a href="#analogy"><span class="n">02</span>類比</a>
+          <a href="#model"><span class="n">03</span>誰做什麼</a>
+          <a href="#orca"><span class="n">04</span>ORCA 有感</a>
+          <a href="#walk"><span class="n">05</span>走一遍</a>
+          <a href="#myth"><span class="n">06</span>容易誤會</a>
+          <a href="#bound"><span class="n">07</span>邊界</a>
+          <a href="#deep"><span class="n">08</span>想再看</a>
+        </nav>
+      </div>
+    </header>
+
+    <div class="wrap" style="padding-top: calc(44px * var(--dens, 1)); padding-bottom: calc(20px * var(--dens, 1))">
+      <main class="space-y-14">
+        <section id="what">
+          <div class="sec-head">
+            <span class="sec-idx">01</span>
+            <div>
+              <h2 style="font-size: calc(27px * var(--fs, 1))">一句話，和可以貼出去的那段</h2>
+              <div class="sec-sub">先講這兩週在試什麼，再拆開五個名字</div>
+            </div>
+          </div>
+
+          <div class="highlight-box">
+            <strong>可以貼到分享串：</strong>
+            <p style="margin-top: calc(8px * var(--dens, 1))">這兩週我在試用 ORCA 把開發排開，最有感的有兩件。第一，我在用的 coding agent（會改程式的助手）各自登入帳號之後可以接到 ORCA；人在外面時，手機透過 Relay，就能遠端叫 Mac 或 Mac mini 上的 ORCA 繼續寫程式。第二，可以很快開出 worktree（工作桌）和 workspace（看板）。worktree 是同一個專案再開一張獨立工作桌，各寫各的分支，才不會一個人切換分支、另一個人的檔案跟著被換掉；workspace 是把這些工作桌放在同一塊看板上，方便我一起看。</p>
+            <p style="margin-top: calc(8px * var(--dens, 1))">另外走到要不要換做法的岔路，我會先請 Jev 判斷，再讓 Pi Agent 切路線。看不懂的程式，或是助手正在改什麼，就用 html-visualizer 畫成一頁我讀得懂的說明；要給人看，再用 cfdrop 丟一條大約一小時會消失的臨時連結。還在試，不是已經定下來的做法。</p>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-4 mt-6">
+            <div class="def-card">
+              <div class="def-term">ORCA<span class="orig">工作台</span></div>
+              <div class="def-oneliner">把助手接到同一塊看板。我人在外面，也能叫家裡的電腦繼續做。</div>
+              <div class="def-detail">手機走 Relay 連 Mac 或 Mac mini。同時進行的開發各開一張工作桌，避免搶同一份檔案。下面第 4 節展開這兩件。</div>
+            </div>
+            <div class="def-card">
+              <div class="def-term">Pi Agent<span class="orig">動手</span></div>
+              <div class="def-oneliner">實際去讀程式、改檔案、跑指令的那個助手。</div>
+              <div class="def-detail">它是一套可以接不同模型的工具，名字本身不是某一家模型。</div>
+            </div>
+            <div class="def-card">
+              <div class="def-term">Jev<span class="orig">判斷</span></div>
+              <div class="def-oneliner">岔路口的判斷：這一步要不要換、換到哪一條路線。</div>
+              <div class="def-detail">它回判斷，不自己改程式。這兩週我把它接在 Pi 的路線切換上。</div>
+            </div>
+            <div class="def-card">
+              <div class="def-term">html-visualizer<span class="orig">說明頁</span></div>
+              <div class="def-oneliner">把「改了什麼、怎麼串」畫成一頁人看得懂的 HTML。</div>
+              <div class="def-detail">給我自己讀。不是投影片，也不是程式審查通過的證明。</div>
+            </div>
+          </div>
+
+          <div class="def-card mt-4">
+            <div class="def-term">cfdrop<span class="orig">臨時連結</span></div>
+            <div class="def-oneliner">說明頁要給別人看時，丟一條大約一小時後會消失的連結。</div>
+            <div class="def-detail">先在自己電腦看過，再決定要不要丟臨時連結。這份說明頁放在 explainer-hub。</div>
+          </div>
+        </section>
+
+        <section id="analogy">
+          <div class="sec-head">
+            <span class="sec-idx">02</span>
+            <div>
+              <h2 style="font-size: calc(27px * var(--fs, 1))">類比</h2>
+              <div class="sec-sub">用家裡修線路來對，下面會標哪裡不像</div>
+            </div>
+          </div>
+
+          <div class="analogy">
+            <div class="analogy-head">這套做法像家裡修線路：有人排工、有人動手、有人在岔路指路，最後交一張你看得懂的說明紙</div>
+            <div class="analogy-row">
+              <span class="known">牆上的工作板，今天修哪一段</span>
+              <span class="arrow">↔</span>
+              <span class="target">ORCA</span>
+            </div>
+            <div class="analogy-row">
+              <span class="known">拿工具、真的去改線路的人</span>
+              <span class="arrow">↔</span>
+              <span class="target">Pi Agent</span>
+            </div>
+            <div class="analogy-row">
+              <span class="known">岔路前說「走左邊還是右邊」的人</span>
+              <span class="arrow">↔</span>
+              <span class="target">Jev</span>
+            </div>
+            <div class="analogy-row">
+              <span class="known">畫給屋主看的說明紙，不是線路本身</span>
+              <span class="arrow">↔</span>
+              <span class="target">html-visualizer</span>
+            </div>
+            <div class="analogy-row">
+              <span class="known">把說明紙貼上公佈欄，約一小時後撕掉</span>
+              <span class="arrow">↔</span>
+              <span class="target">cfdrop</span>
+            </div>
+            <div class="analogy-limit">
+              <strong>類比在哪裡失準：</strong>
+              指路的人不會拿起工具；說明紙不是牆裡的線路，看懂紙不等於線路已經正確；公佈欄會自己收掉，它不是家裡的檔案櫃。
+            </div>
+          </div>
+        </section>
+
+        <section id="model">
+          <div class="sec-head">
+            <span class="sec-idx">03</span>
+            <div>
+              <h2 style="font-size: calc(27px * var(--fs, 1))">誰做什麼</h2>
+              <div class="sec-sub">上面是我讀到的，下面是工作怎麼被排開</div>
+            </div>
+          </div>
+
+          <div class="layers">
+            <div class="layer emph">
+              <span class="name">我讀的那層</span>
+              <span class="role">html-visualizer 畫成說明頁；要外傳才加上 cfdrop</span>
+              <span class="tag">給人看</span>
+            </div>
+            <div class="layer">
+              <span class="name">判斷</span>
+              <span class="role">Jev 只在岔路回答：換，或不換</span>
+              <span class="tag">不改檔</span>
+            </div>
+            <div class="layer">
+              <span class="name">動手</span>
+              <span class="role">Pi Agent 讀程式、改檔、跑指令</span>
+              <span class="tag">會改檔</span>
+            </div>
+            <div class="layer">
+              <span class="name">工作台</span>
+              <span class="role">ORCA 接上各助手，每一輪放在自己的工作桌</span>
+              <span class="tag">編排</span>
+            </div>
+          </div>
+
+          <div class="highlight-box mt-5">
+            四件事分開，我就不會在同一個視窗裡同時追「做到哪」「該不該換」「這段到底在講什麼」。判斷不取代動手，說明頁也不取代程式本身。
+          </div>
+        </section>
+
+        <section id="orca">
+          <div class="sec-head">
+            <span class="sec-idx">04</span>
+            <div>
+              <h2 style="font-size: calc(27px * var(--fs, 1))">ORCA 這兩週對我最有感的兩件</h2>
+              <div class="sec-sub">手機可以接著做，同時進行的開發也不搶同一份檔案</div>
+            </div>
+          </div>
+
+          <div class="grid md:grid-cols-4 gap-3">
+            <div class="def-card">
+              <div class="def-term">1 · 手機</div>
+              <div class="def-oneliner">人在外面，先登入自己的帳號。</div>
+            </div>
+            <div class="def-card">
+              <div class="def-term">2 · Relay</div>
+              <div class="def-oneliner">把這次操作送回我家的電腦，不是把整台電腦公開出去。</div>
+            </div>
+            <div class="def-card">
+              <div class="def-term">3 · 家裡的 ORCA</div>
+              <div class="def-oneliner">Mac 或 Mac mini 上的那份接著跑。</div>
+            </div>
+            <div class="def-card">
+              <div class="def-term">4 · 助手</div>
+              <div class="def-oneliner">Claude、Codex、Cursor、Grok、OpenCode 各自登入後接上來寫。</div>
+            </div>
+          </div>
+
+          <div class="highlight-box mt-5">
+            第一件有感是：助手不用都擠在我眼前這台電腦。手機下指令，活是在 Mac 或 Mac mini 上做的。我離開座位，這一輪還可以繼續。
+          </div>
+
+          <h3 style="font-size: calc(18px * var(--fs, 1)); margin: calc(28px * var(--dens, 1)) 0 calc(12px * var(--dens, 1))">為什麼同時開發會打架</h3>
+          <div class="myth">
+            <div class="m-wrong">
+              <div class="h">大家擠在同一份資料夾</div>
+              <div class="body">專案通常只有一個打開的位置。甲要換分支，乙眼前的檔案會整份被換掉。改到一半的東西會互相蓋。</div>
+            </div>
+            <div class="m-right">
+              <div class="h">同一專案，各一張工作桌</div>
+              <div class="body">worktree 是再開一個資料夾，帶自己的分支。甲改功能 A，乙改功能 B。兩份檔案分開，所以不會被對方的切換抽走。</div>
+            </div>
+          </div>
+
+          <h3 style="font-size: calc(18px * var(--fs, 1)); margin: calc(28px * var(--dens, 1)) 0 calc(12px * var(--dens, 1))">工作桌和看板不是同一件事</h3>
+          <div class="layers">
+            <div class="layer">
+              <span class="name">看板</span>
+              <span class="role">workspace。把好幾張工作桌排在一起看：哪一台機器、哪一輪、做到哪。我從手機看到的是這一層。</span>
+              <span class="tag">在看</span>
+            </div>
+            <div class="layer emph">
+              <span class="name">工作桌</span>
+              <span class="role">worktree。同一個專案的另一個資料夾，自己的分支。真正把檔案分開的是這一層。ORCA 可以很快建好，不用我自己複製一整包再記住哪個資料夾安全。</span>
+              <span class="tag">在寫</span>
+            </div>
+            <div class="layer">
+              <span class="name">主資料夾</span>
+              <span class="role">平常那一份留著。不拿來讓兩個人輪流切分支。</span>
+              <span class="tag">別動</span>
+            </div>
+          </div>
+
+          <div class="highlight-box mt-5">
+            一張工作桌同時只給一個在寫的人。看板可以把很多張桌子排在一起看，不會把兩個人放進同一張桌子。桌子分開之後，做完仍要各自收進來，不會因為分開了就自動合併。
+          </div>
+        </section>
+
+        <section id="walk">
+          <div class="sec-head">
+            <span class="sec-idx">05</span>
+            <div>
+              <h2 style="font-size: calc(27px * var(--fs, 1))">走一遍</h2>
+              <div class="sec-sub">這兩週典型的一次。不是某一份改動的逐筆記錄</div>
+            </div>
+          </div>
+
+          <div class="steps">
+            <div class="step">
+              <div class="step-title">1 · 我知道有東西在改，但看不懂</div>
+              <div class="step-desc">可能是一整包程式，也可能是助手剛解釋的一段。我要的是人話，不是再多一份清單。</div>
+              <div class="mock">
+                <div class="mock-label">此刻</div>
+                <div class="tokrow">
+                  <span class="k">我手上有的</span>
+                  <span class="tokchip dead">看不懂的程式或長說明</span>
+                </div>
+                <div class="tokrow">
+                  <span class="k">我還缺的</span>
+                  <span class="tokchip none">改在哪、為什麼、哪裡別誤會</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-title">2 · ORCA 開一張工作桌，助手動手</div>
+              <div class="step-desc">這一輪放在自己的 worktree，不跟別人搶同一份資料夾。人在外面的話，手機經 Relay 也能叫 Mac 或 Mac mini 上的這一輪繼續。</div>
+              <div class="mock">
+                <div class="mock-label">此刻</div>
+                <div class="tokrow">
+                  <span class="k">工作桌</span>
+                  <span class="tokchip live">這一輪自己的資料夾</span>
+                </div>
+                <div class="tokrow">
+                  <span class="k">人在哪</span>
+                  <span class="tokchip live">電腦前，或手機遠端</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-title">3 · 岔路出現，先問 Jev</div>
+              <div class="step-desc">要不要換做法，不由動手的那個直接猜。Jev 給判斷，Pi 再照判斷繼續。</div>
+              <div class="mock">
+                <div class="mock-label">岔路的兩種結果</div>
+                <div class="tokrow">
+                  <span class="k">不換</span>
+                  <span class="tokchip live">沿原路線做完</span>
+                </div>
+                <div class="tokrow">
+                  <span class="k">要換</span>
+                  <span class="tokchip live">Pi 改走另一條</span>
+                  <span style="color: var(--text-soft); font-size: calc(12px * var(--fs, 1))">Jev 只判斷，不下手改檔</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-title">4 · 畫成一頁說明</div>
+              <div class="step-desc">html-visualizer 把這輪「誰做什麼、改了哪一塊」收成一頁。我先讀這一頁。</div>
+              <div class="mock">
+                <div class="mock-label">頁上會有的</div>
+                <div class="tokrow">
+                  <span class="k">誰做什麼</span>
+                  <span class="tokchip live">工作台、動手、判斷、說明</span>
+                </div>
+                <div class="tokrow">
+                  <span class="k">這輪結果</span>
+                  <span class="tokchip live">改了哪一塊、不要誤會成什麼</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-title">5 · 先留在自己電腦</div>
+              <div class="step-desc">看過、改過字，再決定要不要給別人。沒有網址也可以用。</div>
+              <div class="mock">
+                <div class="mock-label">此刻</div>
+                <div class="tokrow">
+                  <span class="k">檔案</span>
+                  <span class="tokchip live">在自己的電腦</span>
+                </div>
+                <div class="tokrow">
+                  <span class="k">網址</span>
+                  <span class="tokchip none">還沒有</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="step">
+              <div class="step-title">6 · 要分享，才做臨時連結</div>
+              <div class="step-desc">cfdrop 給一條大約一小時的連結。時間到，連結就沒了。本機那份還在。</div>
+              <div class="mock">
+                <div class="mock-label">分享之後</div>
+                <div class="tokrow">
+                  <span class="k">連結</span>
+                  <span class="tokchip live">約 60 分鐘</span>
+                </div>
+                <div class="tokrow">
+                  <span class="k">不放上去的</span>
+                  <span class="tokchip dead">學生資料、密碼、憑證</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="myth">
+          <div class="sec-head">
+            <span class="sec-idx">06</span>
+            <div>
+              <h2 style="font-size: calc(27px * var(--fs, 1))">容易誤會的三件事</h2>
+              <div class="sec-sub">名字都很像「又一個會寫程式的工具」，其實分工不同</div>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <div class="myth">
+              <div class="m-wrong">
+                <div class="h">容易想成</div>
+                <div class="body">Jev 也是一個會改程式的助手，跟 Pi 做同一件事。</div>
+              </div>
+              <div class="m-right">
+                <div class="h">實際上</div>
+                <div class="body">Jev 只在岔路給判斷。改檔、跑指令的是 Pi。沒有判斷要換，Pi 就沿原路線繼續。</div>
+              </div>
+            </div>
+            <div class="myth">
+              <div class="m-wrong">
+                <div class="h">容易想成</div>
+                <div class="body">說明頁做出來，就表示這份改動已經審查通過。</div>
+              </div>
+              <div class="m-right">
+                <div class="h">實際上</div>
+                <div class="body">這一頁幫我讀懂。對不對，仍要看測試和本來的審查，不因為畫得出來就成立。</div>
+              </div>
+            </div>
+            <div class="myth">
+              <div class="m-wrong">
+                <div class="h">容易想成</div>
+                <div class="body">cfdrop 就是我的網站，貼上去就一直在。</div>
+              </div>
+              <div class="m-right">
+                <div class="h">實際上</div>
+                <div class="body">它是臨時連結，大約一小時後消失。連結還在的時候，拿到網址的人打得開。要留久，得另外選固定的地方。</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="bound">
+          <div class="sec-head">
+            <span class="sec-idx">07</span>
+            <div>
+              <h2 style="font-size: calc(27px * var(--fs, 1))">邊界</h2>
+              <div class="sec-sub">這些情況不要把這套直接套上去</div>
+            </div>
+          </div>
+
+          <div class="space-y-3">
+            <div class="bound">
+              <span class="ico">!</span>
+              <div>
+                <b>學生資料、密碼、憑證</b>
+                <span class="why">不寫進說明頁，也不送去給 Jev 判斷。這頁只談工具怎麼分工。</span>
+              </div>
+            </div>
+            <div class="bound">
+              <span class="ico">!</span>
+              <div>
+                <b>說明頁不是正確性證明</b>
+                <span class="why">它解釋「在做什麼」。程式對不對，要另看測試和審查。</span>
+              </div>
+            </div>
+            <div class="bound">
+              <span class="ico">!</span>
+              <div>
+                <b>臨時連結不能當講義</b>
+                <span class="why">大約一小時就沒了。要留久，用本機檔，或改放固定的地方。</span>
+              </div>
+            </div>
+            <div class="bound">
+              <span class="ico">!</span>
+              <div>
+                <b>還不是所有開發的預設</b>
+                <span class="why">這是這兩週的試驗。投影片、對外的研究報告，走原來的做法，不塞進這一頁。</span>
+              </div>
+            </div>
+            <div class="bound">
+              <span class="ico">!</span>
+              <div>
+                <b>Relay 不是公開遠端桌面</b>
+                <span class="why">連的是我自己登入的 ORCA。分享串上的人拿到說明頁，不能因此操作我的 Mac。</span>
+              </div>
+            </div>
+            <div class="bound">
+              <span class="ico">!</span>
+              <div>
+                <b>工作桌分開，不等於已經合併</b>
+                <span class="why">worktree 解決的是同時改檔時互相干擾。做完還是要各自收進同一條線，它不會自動合併。</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="deep">
+          <div class="sec-head">
+            <span class="sec-idx">08</span>
+            <div>
+              <h2 style="font-size: calc(27px * var(--fs, 1))">想再看一層</h2>
+              <div class="sec-sub">主線到上一節就夠分享。這裡是我自己還在調的部分</div>
+            </div>
+          </div>
+
+          <details class="reveal">
+            <summary>
+              為什麼要拆成四件事
+              <span class="tag">原因</span>
+            </summary>
+            <div class="reveal-body">
+              <p>動手、判斷、解釋、分享如果擠在同一個視窗，我只看得到助手一直在講，看不出它現在是在改、在選路，還是在跟我說明。</p>
+              <p>拆開之後，我可以只看說明頁。想追進度再回到 ORCA。岔路的判斷留在 Jev，不跟改檔混在一起。</p>
+            </div>
+          </details>
+
+          <details class="reveal">
+            <summary>
+              Pi 和 Jev 怎麼接
+              <span class="tag">這兩週</span>
+            </summary>
+            <div class="reveal-body">
+              <p>Pi 負責執行。走到要不要換路線，把這個問題交給 Jev，拿回判斷再繼續。</p>
+              <p>分數門檻和每一條路線的細節，這兩週還在調，所以這頁不寫成已經定案的規則。</p>
+            </div>
+          </details>
+
+          <details class="reveal">
+            <summary>
+              臨時連結和固定網站差在哪
+              <span class="tag">分享</span>
+            </summary>
+            <div class="reveal-body">
+              <p>cfdrop 的臨時連結用新的臨時帳號，大約 60 分鐘，時間到就收掉。它不在我自己的固定站上。</p>
+              <p>想留久，可以改放固定子頁，或把 HTML 放進 GitHub。這份說明頁走的是後者，掛在 explainer-hub 的 GitHub Pages。</p>
+            </div>
+          </details>
+        </section>
+      </main>
+    </div>
+
+    <footer class="k-mark">
+      <div class="glyph">∾</div>
+      <div class="meta">兩週分享 · ORCA、Pi、Jev、html-visualizer、cfdrop · 2026-09-25 · explainer-hub</div>
+    </footer>
+
+
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- Session 識別 — 多視窗並行時分辨這份是哪個 session 產的     -->
+    <!-- 產出時把 scripts/session-label.sh 的結果填進下面兩個值      -->
+    <!-- 留空 = 整段停用（範本原檔即此狀態）                        -->
+    <!-- 完整說明見 references/session-identity.md                 -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <script>
+      window.VT_SESSION = { label: "cyclone", id: "local", project: "cyclone" };
+    </script>
+    <style>
+      .vt-session-badge {
+        display: flex;
+        align-items: center;
+        gap: calc(9px * var(--dens, 1));
+        padding: calc(5px * var(--dens, 1)) calc(16px * var(--dens, 1));
+        background: var(--vt-session-color, #666);
+        color: #fff;
+        font-family: var(--mono, ui-monospace, monospace);
+        font-size: calc(11.5px * var(--fs, 1));
+        letter-spacing: 0.06em;
+      }
+      .vt-session-badge .dot {
+        width: 7px;
+        height: 7px;
+        border-radius: 50%;
+        background: #fff;
+        opacity: 0.85;
+        flex-shrink: 0;
+      }
+      .vt-session-badge .lb {
+        font-weight: 700;
+        text-transform: uppercase;
+      }
+      .vt-session-badge .id {
+        margin-left: auto;
+        opacity: 0.75;
+      }
+    </style>
+    <script>
+      (function () {
+        const s = window.VT_SESSION || {};
+        if (!s.label) return;
+        const seed = s.id || s.label;
+        let hue = 7;
+        for (const c of seed) hue = (hue * 31 + c.charCodeAt(0)) % 360;
+        const col = `hsl(${hue} 58% 42%)`;
+        document.title = `${s.label} · ${document.title}`;
+        try {
+          const cv = document.createElement("canvas");
+          cv.width = cv.height = 64;
+          const g = cv.getContext("2d");
+          g.fillStyle = col;
+          if (g.roundRect) {
+            g.beginPath();
+            g.roundRect(2, 2, 60, 60, 14);
+            g.fill();
+          } else {
+            g.fillRect(2, 2, 60, 60);
+          }
+          g.fillStyle = "#fff";
+          g.font = '700 38px ui-sans-serif, system-ui, "PingFang TC"';
+          g.textAlign = "center";
+          g.textBaseline = "middle";
+          const ch = (s.label.match(/[A-Za-z0-9一-鿿]/) || ["?"])[0];
+          g.fillText(ch.toUpperCase(), 32, 36);
+          const link = document.createElement("link");
+          link.rel = "icon";
+          link.href = cv.toDataURL();
+          document.head.appendChild(link);
+        } catch (e) {}
+        const b = document.createElement("div");
+        b.className = "vt-session-badge";
+        b.style.setProperty("--vt-session-color", col);
+        b.innerHTML =
+          '<span class="dot"></span><span class="lb"></span><span class="id"></span>';
+        b.querySelector(".lb").textContent = s.label;
+        b.querySelector(".id").textContent = s.id || "";
+        const host = document.querySelector("header") || document.body;
+        host.insertBefore(b, host.firstChild);
+      })();
+    </script>
+  <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 全頁評論系統 — 預設內建、可手動移除                       -->
+    <!-- 完整 snippet 見 references/interaction-patterns.md       -->
+    <!-- § 全頁評論系統（page-wide commenting，預設內建）         -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <style>
+      .vt-comment-trigger {
+        position: fixed;
+        z-index: 9998;
+        background: var(--paper);
+        border: 1.5px solid var(--clay);
+        border-radius: 999px;
+        padding: calc(6px * var(--dens, 1)) calc(12px * var(--dens, 1));
+        font-size: calc(12px * var(--fs, 1));
+        color: var(--clay);
+        font-family: var(--mono);
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(20, 20, 19, 0.12);
+        display: none;
+        align-items: center;
+        gap: calc(6px * var(--dens, 1));
+        transition: all 0.15s;
+      }
+      .vt-comment-trigger:hover {
+        background: var(--clay);
+        color: var(--paper);
+      }
+      .vt-comment-popup {
+        position: fixed;
+        z-index: 9999;
+        background: var(--paper);
+        border: 1.5px solid var(--g300);
+        border-radius: 12px;
+        box-shadow: 0 12px 32px rgba(20, 20, 19, 0.15);
+        padding: calc(14px * var(--dens, 1)) calc(16px * var(--dens, 1));
+        width: 340px;
+        display: none;
+      }
+      .vt-comment-popup .quote {
+        background: var(--g100);
+        border-left: 3px solid var(--clay);
+        padding: calc(8px * var(--dens, 1)) calc(10px * var(--dens, 1));
+        font-size: calc(12.5px * var(--fs, 1));
+        color: var(--g700);
+        line-height: 1.45;
+        margin-bottom: calc(10px * var(--dens, 1));
+        max-height: 80px;
+        overflow-y: auto;
+      }
+      .vt-comment-popup textarea {
+        width: 100%;
+        border: 1.5px solid var(--g300);
+        border-radius: 8px;
+        padding: calc(8px * var(--dens, 1)) calc(10px * var(--dens, 1));
+        font-size: calc(13px * var(--fs, 1));
+        font-family: var(--sans);
+        resize: vertical;
+        min-height: 60px;
+        color: var(--slate);
+        box-sizing: border-box;
+      }
+      .vt-comment-popup textarea:focus {
+        outline: none;
+        border-color: var(--clay);
+      }
+      .vt-comment-popup .actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: calc(10px * var(--dens, 1));
+        font-size: calc(11.5px * var(--fs, 1));
+      }
+      .vt-comment-popup .hint {
+        color: var(--g500);
+        font-family: var(--mono);
+      }
+      .vt-comment-popup button.send {
+        background: var(--clay);
+        color: var(--paper);
+        border: none;
+        border-radius: 8px;
+        padding: calc(6px * var(--dens, 1)) calc(14px * var(--dens, 1));
+        font-size: calc(12.5px * var(--fs, 1));
+        font-weight: 600;
+        cursor: pointer;
+      }
+      .vt-comment-popup button.send:hover {
+        background: var(--clay-d);
+      }
+      .vt-comment-popup button.cancel {
+        background: transparent;
+        border: 1px solid var(--g300);
+        color: var(--g500);
+        border-radius: 8px;
+        padding: calc(6px * var(--dens, 1)) calc(12px * var(--dens, 1));
+        font-size: calc(12.5px * var(--fs, 1));
+        cursor: pointer;
+        margin-right: calc(8px * var(--dens, 1));
+      }
+      mark.vt-comment-mark {
+        background: var(--oat);
+        padding: 0 calc(2px * var(--dens, 1));
+        border-radius: 2px;
+        cursor: pointer;
+      }
+      mark.vt-comment-mark:hover {
+        background: #d5c4a8;
+      }
+      .vt-comment-pill {
+        position: fixed;
+        right: 16px;
+        bottom: 16px;
+        z-index: 9990;
+        background: var(--paper);
+        border: 1.5px solid var(--clay);
+        border-radius: 999px;
+        padding: calc(8px * var(--dens, 1)) calc(14px * var(--dens, 1));
+        font-family: var(--mono);
+        font-size: calc(12px * var(--fs, 1));
+        color: var(--clay);
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(20, 20, 19, 0.1);
+        display: none;
+        align-items: center;
+        gap: calc(6px * var(--dens, 1));
+        transition: all 0.15s;
+      }
+      .vt-comment-pill.is-active {
+        display: inline-flex;
+      }
+      .vt-comment-pill:hover {
+        background: var(--clay);
+        color: var(--paper);
+      }
+      .vt-comment-pill strong {
+        font-weight: 600;
+      }
+      .vt-comment-list {
+        position: fixed;
+        right: 16px;
+        bottom: 60px;
+        width: 360px;
+        max-height: 60vh;
+        z-index: 9991;
+        background: var(--paper);
+        border: 1.5px solid var(--g300);
+        border-radius: 14px;
+        box-shadow: 0 12px 32px rgba(20, 20, 19, 0.15);
+        display: none;
+        flex-direction: column;
+      }
+      .vt-comment-list.is-open {
+        display: flex;
+      }
+      .vt-comment-list-header {
+        background: var(--paper);
+        border-bottom: 1.5px solid var(--g200);
+        padding: calc(12px * var(--dens, 1)) calc(16px * var(--dens, 1));
+        font-family: var(--mono);
+        font-size: calc(11px * var(--fs, 1));
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: var(--g500);
+        font-weight: 600;
+        border-radius: 14px 14px 0 0;
+      }
+      .vt-comment-list-items {
+        overflow-y: auto;
+        flex: 1;
+      }
+      .vt-comment-item {
+        padding: calc(12px * var(--dens, 1)) calc(16px * var(--dens, 1));
+        border-bottom: 1px solid var(--g200);
+      }
+      .vt-comment-item:last-child {
+        border-bottom: none;
+      }
+      .vt-comment-item .item-quote {
+        font-size: calc(11.5px * var(--fs, 1));
+        color: var(--g500);
+        font-style: italic;
+        border-left: 2px solid var(--oat);
+        padding-left: calc(8px * var(--dens, 1));
+        line-height: 1.4;
+        margin-bottom: calc(6px * var(--dens, 1));
+      }
+      .vt-comment-item .item-body {
+        font-size: calc(13px * var(--fs, 1));
+        color: var(--slate);
+        line-height: 1.5;
+      }
+      .vt-comment-item .item-del {
+        font-size: calc(11px * var(--fs, 1));
+        color: var(--g500);
+        background: none;
+        border: none;
+        cursor: pointer;
+        margin-top: calc(4px * var(--dens, 1));
+        padding: 0;
+        font-family: inherit;
+      }
+      .vt-comment-item .item-del:hover {
+        color: var(--red);
+      }
+      .vt-comment-list-footer {
+        border-top: 1.5px solid var(--g200);
+        padding: calc(10px * var(--dens, 1)) calc(16px * var(--dens, 1));
+        display: flex;
+        justify-content: space-between;
+        gap: calc(8px * var(--dens, 1));
+        border-radius: 0 0 14px 14px;
+        background: var(--g100);
+      }
+      .vt-comment-list-footer button {
+        background: transparent;
+        border: 1.5px solid var(--g300);
+        border-radius: 8px;
+        padding: calc(6px * var(--dens, 1)) calc(12px * var(--dens, 1));
+        font-size: calc(12px * var(--fs, 1));
+        color: var(--g700);
+        cursor: pointer;
+        font-family: inherit;
+      }
+      .vt-comment-list-footer button:hover {
+        border-color: var(--slate);
+        color: var(--slate);
+      }
+      .vt-comment-list-footer button.copy {
+        background: var(--clay);
+        color: var(--paper);
+        border-color: var(--clay);
+      }
+      .vt-comment-list-footer button.copy:hover {
+        background: var(--clay-d);
+      }
+      body.vt-has-existing-export .vt-comment-list-footer button.copy {
+        display: none;
+      }
+    </style>
+    <button class="vt-comment-trigger" id="vt-comment-trigger">💬 評論</button>
+    <div class="vt-comment-popup" id="vt-comment-popup">
+      <div class="quote" id="vt-popup-quote"></div>
+      <textarea
+        id="vt-popup-textarea"
+        placeholder="對這段文字的評論 / 疑問 / 補充..."
+      ></textarea>
+      <div class="actions">
+        <span class="hint">⌘ + Enter 送出 · Esc 取消</span>
+        <div>
+          <button class="cancel" id="vt-popup-cancel">取消</button
+          ><button class="send" id="vt-popup-send">送出</button>
+        </div>
+      </div>
+    </div>
+    <button class="vt-comment-pill" id="vt-comment-pill">
+      💬 <strong id="vt-count">0</strong>
+    </button>
+    <div class="vt-comment-list" id="vt-comment-list">
+      <div class="vt-comment-list-header">— 我的評論</div>
+      <div class="vt-comment-list-items" id="vt-comment-list-items"></div>
+      <div class="vt-comment-list-footer">
+        <button id="vt-clear-all">全部清除</button>
+        <button class="copy" id="vt-copy-fallback">📋 複製評論</button>
+      </div>
+    </div>
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- 共用複製工具 — file:// 下瀏覽器停用 navigator.clipboard，   -->
+    <!-- 一定會落到 execCommand 備援；備援也可能失敗，必須誠實回報   -->
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <script>
+      // 三段式：clipboard API → execCommand 備援 → 都失敗回 false（不假報成功）
+      window.vtCopyText = async function (text) {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          try {
+            await navigator.clipboard.writeText(text);
+            return true;
+          } catch (err) {
+            // 落到 execCommand 備援
+          }
+        }
+        const ta = document.createElement("textarea");
+        ta.value = text;
+        ta.setAttribute("readonly", "");
+        ta.style.position = "fixed";
+        ta.style.top = "-9999px";
+        ta.style.left = "-9999px";
+        document.body.appendChild(ta);
+        try {
+          ta.select();
+          ta.setSelectionRange(0, ta.value.length);
+          return document.execCommand("copy") === true;
+        } catch (err) {
+          return false;
+        } finally {
+          ta.remove();
+        }
+      };
+
+      // 複製失敗時的出路：把文字放進可選取區域並全選，使用者按一次 Cmd+C 即可
+      // target 有給就用頁面既有的預覽區（wrap 為它的外層、會自動展開）；
+      // 沒有預覽區就建一個臨時可選取區（雙擊可關閉）。
+      window.vtSelectForManualCopy = function (text, target, wrap) {
+        let node = target;
+        if (node) {
+          node.textContent = text;
+          if (wrap) wrap.classList.remove("hidden");
+        } else {
+          node = document.getElementById("vt-manual-copy-box");
+          if (!node) {
+            node = document.createElement("pre");
+            node.id = "vt-manual-copy-box";
+            node.title = "雙擊關閉";
+            node.style.cssText =
+              "position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;" +
+              "max-width:min(720px,92vw);max-height:40vh;overflow:auto;white-space:pre-wrap;" +
+              "background:#fff;color:#111;border:1.5px solid #999;border-radius:10px;" +
+              "padding:14px 16px;font-size:12.5px;line-height:1.6;" +
+              "box-shadow:0 12px 40px rgba(0,0,0,.28)";
+            node.addEventListener("dblclick", function () {
+              node.remove();
+            });
+            document.body.appendChild(node);
+          }
+          node.textContent = text;
+        }
+        node.scrollIntoView({ block: "nearest" });
+        const sel = window.getSelection();
+        if (sel) {
+          const range = document.createRange();
+          range.selectNodeContents(node);
+          sel.removeAllRanges();
+          sel.addRange(range);
+        }
+        return node;
+      };
+    </script>
+
+    <script>
+      (function () {
+        const S = "vt-comments-" + location.pathname,
+          L = 80;
+        let c = JSON.parse(localStorage.getItem(S) || "[]"),
+          sel = null;
+        const $ = (i) => document.getElementById(i),
+          tr = $("vt-comment-trigger"),
+          p = $("vt-comment-popup"),
+          pq = $("vt-popup-quote"),
+          pt = $("vt-popup-textarea"),
+          pi = $("vt-comment-pill"),
+          ce = $("vt-count"),
+          le = $("vt-comment-list"),
+          li = $("vt-comment-list-items");
+        window.vtCollectComments = function () {
+          if (!c.length) return "";
+          return (
+            "\n\n---\n\n" +
+            c
+              .map((x) => {
+                const q =
+                  x.quote.length > L ? x.quote.slice(0, L) + "…" : x.quote;
+                return `@評論「${q}」\n  → ${x.body}`;
+              })
+              .join("\n\n")
+          );
+        };
+        function hs(e) {
+          if (
+            e.target.closest(
+              ".vt-comment-popup,.vt-comment-trigger,.vt-comment-pill,.vt-comment-list,button,input,select,textarea",
+            )
+          )
+            return;
+          setTimeout(() => {
+            const s = getSelection(),
+              t = s.toString().trim();
+            if (!t || t.length < 2) {
+              tr.style.display = "none";
+              return;
+            }
+            const r = s.getRangeAt(0),
+              b = r.getBoundingClientRect();
+            sel = { text: t, range: r.cloneRange() };
+            tr.style.display = "inline-flex";
+            tr.style.top = Math.max(8, b.top - 38) + "px";
+            tr.style.left = Math.max(8, b.left + b.width / 2 - 40) + "px";
+          }, 10);
+        }
+        document.addEventListener("mouseup", hs);
+        document.addEventListener("touchend", hs);
+        tr.addEventListener("click", op);
+        function op() {
+          if (!sel) return;
+          const q = sel.text.length > L ? sel.text.slice(0, L) + "…" : sel.text;
+          pq.textContent = q;
+          pt.value = "";
+          const t = tr.getBoundingClientRect();
+          let l = t.left;
+          if (l + 340 > innerWidth - 16) l = innerWidth - 356;
+          let to = t.bottom + 6;
+          if (to + 220 > innerHeight) to = t.top - 230;
+          p.style.left = Math.max(8, l) + "px";
+          p.style.top = Math.max(8, to) + "px";
+          tr.style.display = "none";
+          p.style.display = "block";
+          setTimeout(() => pt.focus(), 50);
+        }
+        $("vt-popup-cancel").addEventListener("click", cp);
+        $("vt-popup-send").addEventListener("click", sc);
+        pt.addEventListener("keydown", (e) => {
+          if (e.isComposing || e.keyCode === 229) return;
+          if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            e.stopPropagation();
+            sc();
+          }
+          if (e.key === "Escape") cp();
+        });
+        function cp() {
+          p.style.display = "none";
+          sel = null;
+        }
+        function sc() {
+          const b = pt.value.trim();
+          if (!b || !sel) return cp();
+          const id = "c-" + Date.now(),
+            q = sel.text;
+          try {
+            const m = document.createElement("mark");
+            m.className = "vt-comment-mark";
+            m.dataset.commentId = id;
+            sel.range.surroundContents(m);
+          } catch (e) {}
+          c.push({ id, quote: q, body: b, ts: Date.now() });
+          ps();
+          rn();
+          cp();
+          getSelection().removeAllRanges();
+        }
+        function ps() {
+          localStorage.setItem(S, JSON.stringify(c));
+        }
+        function rn() {
+          ce.textContent = c.length;
+          pi.classList.toggle("is-active", c.length > 0);
+          if (!c.length) le.classList.remove("is-open");
+          li.innerHTML = c
+            .map((x) => {
+              const q =
+                x.quote.length > 60 ? x.quote.slice(0, 60) + "…" : x.quote;
+              return `<div class="vt-comment-item" data-id="${x.id}"><div class="item-quote">「${eh(q)}」</div><div class="item-body">${eh(x.body)}</div><button class="item-del" data-del="${x.id}">刪除</button></div>`;
+            })
+            .join("");
+          li.querySelectorAll("[data-del]").forEach((b) =>
+            b.addEventListener("click", () => dc(b.dataset.del)),
+          );
+        }
+        function dc(id) {
+          c = c.filter((x) => x.id !== id);
+          document
+            .querySelectorAll(`mark.vt-comment-mark[data-comment-id="${id}"]`)
+            .forEach((m) => {
+              const pr = m.parentNode;
+              while (m.firstChild) pr.insertBefore(m.firstChild, m);
+              pr.removeChild(m);
+              pr.normalize();
+            });
+          ps();
+          rn();
+        }
+        function eh(s) {
+          return String(s).replace(
+            /[&<>"']/g,
+            (ch) =>
+              ({
+                "&": "&amp;",
+                "<": "&lt;",
+                ">": "&gt;",
+                '"': "&quot;",
+                "'": "&#39;",
+              })[ch],
+          );
+        }
+        pi.addEventListener("click", () => le.classList.toggle("is-open"));
+        $("vt-clear-all").addEventListener("click", () => {
+          if (!c.length) return;
+          if (!confirm("確定清除全部 " + c.length + " 條評論？")) return;
+          document.querySelectorAll("mark.vt-comment-mark").forEach((m) => {
+            const pr = m.parentNode;
+            while (m.firstChild) pr.insertBefore(m.firstChild, m);
+            pr.removeChild(m);
+            pr.normalize();
+          });
+          c = [];
+          ps();
+          rn();
+        });
+        $("vt-copy-fallback").addEventListener("click", async (e) => {
+          if (!c.length) return;
+          const t = window.vtCollectComments().replace(/^\n\n---\n\n/, ""),
+            b = e.currentTarget,
+            o = b.textContent;
+          const ok = await window.vtCopyText(t);
+          if (ok) {
+            b.textContent = "✅ 已複製";
+          } else {
+            // 複製不到就不假報成功：把評論放進臨時區域並全選
+            window.vtSelectForManualCopy(t);
+            b.textContent = "已選取 → 請按 Cmd+C";
+          }
+          setTimeout(() => (b.textContent = o), ok ? 2000 : 6000);
+        });
+        setTimeout(() => {
+          if (typeof window.vtBuildDecisionExport === "function")
+            document.body.classList.add("vt-has-existing-export");
+        }, 100);
+        document.addEventListener("click", (e) => {
+          if (
+            p.style.display === "block" &&
+            !e.target.closest(".vt-comment-popup,.vt-comment-trigger")
+          )
+            cp();
+        });
+        rn();
+      })();
+    </script>
+  
+    <!-- ═══════════════════════════════════════════════════════ -->
+    <!-- vt-tweaks:begin v=e16be4c3e3 -->
+<style id="vt-tweaks-css">
+/* 風格設定面板 — 與 tweaks.js 成對，由 scripts/stamp.py 在 verify 時注入頁尾（作者不用複製）。
+   字級與間距的倍率靠兩個變數：--fs（字級）、--dens（間距）。stamp.py 會把頁面裡寫死的
+   px 字級與間距改成 calc(原值 * var(--fs|--dens, 1))，這裡只負責「哪些區塊不吃倍率」。 */
+
+/* 不吃倍率：結構圖、畫面樣張（它們是示意畫面，照比例縮放才對）、頁面介面本身
+   （風格設定面板、評論工具、session 徽章；字放到 200% 時還得能把它調回來）、作者手動鎖定的區塊。
+   ⚠️ 要逐一列出，不能用「class 以 vt- 開頭」：評論工具會在 body 加 vt-has-existing-export，
+   前綴比對會把整頁鎖死；被評論標記的文字（vt-comment-mark）也該跟著內文縮放。 */
+svg,
+.mock,
+[data-tw-lock],
+.vt-tw-root,
+.vt-comment-trigger,
+.vt-comment-popup,
+.vt-comment-pill,
+.vt-comment-list,
+.vt-session-badge {
+  --fs: 1;
+  --dens: 1;
+}
+/* 沒宣告字級的頁面（spec-alignment 範本就是）：零權重，任何頁面規則都蓋得過它 */
+:where(body) {
+  font-size: calc(16px * var(--fs, 1));
+}
+/* Tailwind 文字 class 的覆寫由 stamp.py 視頁面需要產生（只在有 Tailwind、倍率≠1 時生效），不放這裡 */
+
+/* ── 面板本體（按鈕與面板都掛 vt-tw-root → 在上面的排除清單裡，不吃倍率）── */
+/* 沒有底部列可停的頁：浮在左下角（右下角是評論工具） */
+.vt-tw-launch {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  z-index: 9100;
+  display: flex;
+  align-items: center;
+  gap: calc(5px * var(--dens, 1));
+  font: 600 calc(12px * var(--fs, 1)) var(--sans, system-ui, sans-serif);
+  padding: calc(5px * var(--dens, 1)) calc(10px * var(--dens, 1));
+  border-radius: 999px;
+  border: 1.5px solid var(--slate, #141413);
+  background: var(--slate, #141413);
+  color: #fff;
+  cursor: pointer;
+  box-shadow: 0 6px 18px rgba(20, 20, 19, 0.2);
+}
+.vt-tw-launch svg {
+  width: 14px;
+  height: 14px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+/* 停在底部列「預覽摘要」左邊：外觀跟旁邊的次要按鈕一致，各寬度都停（窄螢幕只顯示圖示，見檔尾） */
+.vt-tw-launch.vt-tw-docked {
+  position: static;
+  display: inline-flex; /* 父層是一般區塊時才不會獨佔一行、把列撐高 */
+  font: 500 calc(14px * var(--fs, 1)) var(--sans, system-ui, sans-serif);
+  padding: calc(10px * var(--dens, 1)) calc(16px * var(--dens, 1));
+  border-radius: 10px;
+  border: 1.5px solid var(--g300, #d1cfc5);
+  background: #fff;
+  color: var(--slate, #141413);
+  box-shadow: none;
+}
+.vt-tw-launch.vt-tw-docked:hover {
+  border-color: var(--slate, #141413);
+}
+/* 位置（bottom、left／right、max-height）由 tweaks.js 依按鈕位置算 */
+.vt-tw-pop {
+  position: fixed;
+  width: min(330px, 92vw);
+  overflow: auto;
+  z-index: 9100;
+  background: #fff;
+  color: var(--slate, #141413);
+  border: 1.5px solid var(--g300, #d1cfc5);
+  border-radius: 12px;
+  box-shadow: 0 16px 44px rgba(20, 20, 19, 0.22);
+  padding: calc(14px * var(--dens, 1)) calc(16px * var(--dens, 1)) calc(16px * var(--dens, 1));
+  font: calc(13px * var(--fs, 1))/1.5 var(--sans, system-ui, sans-serif);
+  text-align: left;
+}
+.vt-tw-pop[hidden] {
+  display: none;
+}
+.vt-tw-sec {
+  font: 600 calc(10.5px * var(--fs, 1)) var(--mono, ui-monospace, monospace);
+  color: var(--g500, #87867f);
+  letter-spacing: 0.06em;
+  margin: calc(12px * var(--dens, 1)) 0 calc(6px * var(--dens, 1));
+  padding-top: calc(10px * var(--dens, 1));
+  border-top: 1px solid var(--g200, #e6e3da);
+}
+.vt-tw-sec.vt-tw-first {
+  border-top: 0;
+  padding-top: 0;
+  margin-top: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+/* 中英切換：面板頂端那行的右邊 */
+.vt-tw-lang {
+  font: 600 calc(11px * var(--fs, 1)) var(--sans, system-ui, sans-serif);
+  letter-spacing: 0;
+  padding: calc(2px * var(--dens, 1)) calc(8px * var(--dens, 1));
+  border-radius: 6px;
+  border: 1.5px solid var(--g300, #d1cfc5);
+  background: #fff;
+  color: var(--g700, #3d3d3a);
+  cursor: pointer;
+}
+.vt-tw-lang:hover {
+  border-color: var(--slate, #141413);
+}
+.vt-tw-item {
+  margin: calc(8px * var(--dens, 1)) 0;
+}
+.vt-tw-label {
+  display: flex;
+  justify-content: space-between;
+  gap: calc(8px * var(--dens, 1));
+  font-weight: 600;
+  margin-bottom: calc(4px * var(--dens, 1));
+}
+.vt-tw-val {
+  font-family: var(--mono, ui-monospace, monospace);
+  font-weight: 500;
+  color: var(--clay-d, #b85c3e);
+}
+.vt-tw-item input[type="range"] {
+  width: 100%;
+  accent-color: var(--clay, #d97757);
+}
+.vt-tw-seg {
+  display: flex;
+  border: 1.5px solid var(--g300, #d1cfc5);
+  border-radius: 8px;
+  overflow: hidden;
+}
+.vt-tw-seg button {
+  flex: 1;
+  font: calc(12.5px * var(--fs, 1)) var(--sans, system-ui, sans-serif);
+  padding: calc(5px * var(--dens, 1)) calc(4px * var(--dens, 1));
+  border: 0;
+  border-right: 1px solid var(--g300, #d1cfc5);
+  background: #fff;
+  color: var(--g700, #3d3d3a);
+  cursor: pointer;
+}
+.vt-tw-seg button:last-child {
+  border-right: 0;
+}
+.vt-tw-seg button.vt-tw-on {
+  background: var(--slate, #141413);
+  color: #fff;
+}
+.vt-tw-hint {
+  font-size: calc(11.5px * var(--fs, 1));
+  color: var(--g500, #87867f);
+  line-height: 1.5;
+  margin-top: calc(5px * var(--dens, 1));
+}
+.vt-tw-actions {
+  display: flex;
+  gap: calc(8px * var(--dens, 1));
+  margin-top: calc(14px * var(--dens, 1));
+}
+.vt-tw-actions button {
+  flex: 1;
+  font: calc(12.5px * var(--fs, 1)) var(--sans, system-ui, sans-serif);
+  padding: calc(7px * var(--dens, 1)) calc(8px * var(--dens, 1));
+  border-radius: 8px;
+  border: 1.5px solid var(--g300, #d1cfc5);
+  background: #fff;
+  cursor: pointer;
+}
+.vt-tw-actions button.vt-tw-pri {
+  border-color: var(--clay, #d97757);
+  color: var(--clay-d, #b85c3e);
+  font-weight: 600;
+}
+.vt-tw-actions button:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+.vt-tw-manual {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: calc(8px * var(--dens, 1));
+  padding: calc(6px * var(--dens, 1)) calc(8px * var(--dens, 1));
+  font: calc(11px * var(--fs, 1))/1.5 var(--mono, ui-monospace, monospace);
+  border: 1.5px solid var(--g300, #d1cfc5);
+  border-radius: 8px;
+  resize: vertical;
+}
+.vt-tw-manual[hidden] {
+  display: none;
+}
+.vt-tw-actions button[aria-pressed="true"] {
+  background: var(--clay-d, #b85c3e);
+  border-color: var(--clay-d, #b85c3e);
+  color: #fff;
+}
+@media (max-width: 760px) {
+  .vt-tw-launch {
+    padding: calc(8px * var(--dens, 1));
+  }
+  .vt-tw-lbl {
+    display: none; /* 手機只留圖示，少蓋一點內容 */
+  }
+}
+/* 範本底部列在 900px 以下擠不下帶字的第三顆鈕：只留圖示、縮內距，高度跟旁邊的按鈕拉齊。
+   約 360px 以下、以及 700px 前後一小段寬度，列仍可能折成兩行（範圍依列上的文字與按鈕字數而定；等於更窄螢幕的版型），接受 */
+@media (max-width: 900px) {
+  .vt-tw-docked .vt-tw-lbl {
+    display: none;
+  }
+  .vt-tw-launch.vt-tw-docked {
+    padding: calc(10px * var(--dens, 1)) calc(11px * var(--dens, 1));
+    align-self: stretch;
+  }
+}
+
+</style>
+<script id="vt-tweaks-js" data-profile-tool="$HOME/.grok/skills/html-visualizer/scripts/profile.py">
+/* 風格設定面板 — 與 tweaks.css 成對，由 scripts/stamp.py 在 verify 時注入頁尾（作者不用複製）。
+ * 按鈕「風格設定」：頁面有範本底部列的「預覽摘要」（#preview-btn）就停在它左邊，各寬度都是（窄螢幕只顯示圖示）；
+ * 沒有底部列就固定在左下角（右下角是評論工具的位置）。面板從按鈕上方打開。
+ * 底部列一律用範本的，按鈕不偵測、不閃避頁面自己做的固定列。
+ * （本檔任何地方都不能出現 script 的結尾標籤字樣，否則內嵌時瀏覽器會在那裡把腳本切斷。）
+ *
+ * 固定層（每頁都有）：字級 90%–200%、密度、內容寬度，寫在 <html> 的 --fs／--dens／--wrap-max。
+ * 內容層（作者選配，預設 0 項）：頁面放一個 type 為 application/json、id 為 vt-tweaks 的 script 區塊，
+ *   內容是 [{id,label,options:[[值,顯示],...],hint}]。
+ * 選了之後在 <html> 設 data-tw-<id>="值"，作者只寫對應的 CSS，不寫 JS。hint 必填（這項會改到頁面上的什麼）。
+ * 調過的值只改畫面、不進複製摘要。讀者按「存成我的預設」才產生「設定檔變更」段落（給 AI 執行的一行
+ * profile.py 指令，使用者不用自己跑）：有拍板摘要的頁經 window.vtCollectComments 接進摘要，沒有的頁直接複製。
+ * 介面有中英兩種，面板頂端可切換（「設定檔變更」段落也跟著換語言）。
+ */
+(function () {
+  var root = document.documentElement;
+  var me = document.currentScript;
+  var tool = (me && me.getAttribute("data-profile-tool")) || "profile.py";
+  // 介面語言：讀者切換過就記在瀏覽器、之後的頁沿用；沒切過跟頁面的 lang 走。
+  // 沙盒 iframe（沒開 allow-same-origin）一碰 localStorage 就丟錯，所以包 try
+  var lang = null;
+  try {
+    lang = localStorage.getItem("vt-tw-lang");
+  } catch (e) {}
+  if (lang !== "zh" && lang !== "en") lang = /^en/i.test(root.lang) ? "en" : "zh";
+  var LANG = {
+    zh: {
+      name: "風格設定",
+      short: "風格設定",
+      title: "風格設定（字級、密度、寬度）",
+      fixed: "固定層 · 每頁都有",
+      content: "內容層 · 這頁專屬",
+      swap: "EN",
+      reset: "全部還原",
+      save: "存成我的預設",
+      added: "已加進複製摘要",
+      copied: "已複製，貼回對話即可",
+      select: "已選取，請按 Cmd+C",
+      need: function (n) {
+        return "調過" + n.slice(0, -1).join("、") + "或" + n[n.length - 1] + "，才能存成你的預設。";
+      },
+      undo: "存檔指令已加進這頁的複製摘要，複製後貼回對話即可；再按一次取消。",
+      toSummary: "按下後，存檔指令會加進這頁的複製摘要；貼回對話，AI 會寫進你的設定檔，之後的頁都用這組。",
+      toCopy: "按下後會複製一段指令；貼回對話，AI 會寫進你的設定檔，之後的頁都用這組。",
+      head: "## 設定檔變更\n給 AI：使用者要把這頁的顯示設定存成預設（",
+      pair: "：",
+      join: "、",
+      tail: "）。請解析下列已知鍵值，使用目前受管 skill 的 profile.py 更新設定並回報前後差異；不要直接執行整行 shell。\n",
+    },
+    en: {
+      name: "Style settings",
+      short: "Style",
+      title: "Style settings (text size, density, width)",
+      fixed: "Every page",
+      content: "This page only",
+      swap: "中文",
+      reset: "Reset all",
+      save: "Save as my default",
+      added: "Added to summary",
+      copied: "Copied",
+      select: "Press Cmd+C",
+      need: function (n) {
+        n = n.map(function (x) {
+          return x.toLowerCase();
+        });
+        return "Change the " + n.slice(0, -1).join(", ") + " or " + n[n.length - 1] + " to save it as your default.";
+      },
+      undo: "The save command is in this page's copy summary. Copy the summary and paste it into the chat. Click again to remove it.",
+      toSummary: "Adds a save command to this page's copy summary. Paste it into the chat and the AI writes it to your profile; later pages use these settings.",
+      toCopy: "Copies a save command. Paste it into the chat and the AI writes it to your profile; later pages use these settings.",
+      head: "## Profile changes\nFor the AI: the user wants to save this page's display settings as their default (",
+      pair: ": ",
+      join: ", ",
+      tail: "). Parse the known key/value pairs below and update the profile with the currently managed skill's profile.py. Report the before and after values; do not execute the whole shell line.\n",
+    },
+  };
+  var L = LANG[lang];
+  // 固定層的名稱與選項是 {zh, en}；作者寫的內容層（字串或數字）原樣顯示
+  function txt(x) {
+    return x && typeof x === "object" ? x[lang] : x;
+  }
+  var cs = getComputedStyle(root);
+  function cssNum(name, fallback) {
+    var v = parseFloat(cs.getPropertyValue(name));
+    return isNaN(v) ? fallback : v;
+  }
+  var baseFs = cssNum("--fs", 1);
+  var DENS = [
+    ["0.75", { zh: "緊湊", en: "Compact" }, "compact"],
+    ["1", { zh: "標準", en: "Standard" }, "standard"],
+    ["1.3", { zh: "寬鬆", en: "Relaxed" }, "relaxed"],
+  ];
+  var baseDens = String(cssNum("--dens", 1));
+  if (!DENS.some(function (d) { return d[0] === baseDens; })) baseDens = "1";
+  // 內容寬度只在頁面有用 --wrap-max 時提供（範本在 :root 宣告它）；沒宣告的頁按了也不會動，乾脆不顯示
+  var rawWrap = cs.getPropertyValue("--wrap-max").trim();
+  var baseWrap = parseFloat(rawWrap) || 1760;
+  var wrapOpts = [
+    ["1760px", { zh: "滿版", en: "Full" }, "1760"],
+    ["1080px", { zh: "閱讀寬", en: "Reading" }, "1080"],
+  ];
+  if (baseWrap !== 1760 && baseWrap !== 1080) wrapOpts.unshift([baseWrap + "px", { zh: "預設", en: "Default" }, String(baseWrap)]);
+  var FIXED = [
+    { id: "fs", label: { zh: "字級", en: "Text size" }, kind: "range", min: 0.9, max: 2, step: 0.05, def: String(baseFs), css: "--fs", profile: "tokens.type.scale" },
+    { id: "dens", label: { zh: "密度", en: "Density" }, css: "--dens", def: baseDens, profile: "tokens.layout.density", options: DENS },
+  ];
+  if (rawWrap) {
+    FIXED.push({ id: "width", label: { zh: "內容寬度", en: "Width" }, css: "--wrap-max", def: baseWrap + "px", profile: "tokens.layout.maxWidth", options: wrapOpts });
+  }
+  // html.vt-fs：倍率≠1 時才讓 Tailwind 文字 class 的覆寫生效（stamp.py 產生的規則都掛在它底下）
+  root.classList.toggle("vt-fs", baseFs !== 1);
+  var content = [];
+  // 用 querySelector：沒有內容層的頁面本來就沒有這個元素，不該被 verify 的元素參照檢查報成缺漏
+  var decl = document.querySelector("script#vt-tweaks");
+  if (decl) {
+    try {
+      content = JSON.parse(decl.textContent);
+    } catch (e) {
+      console.error("vt-tweaks 宣告不是合法 JSON", e);
+    }
+  }
+  content = content.filter(function (c) {
+    var ok =
+      c && c.id && c.label && Array.isArray(c.options) && c.options.length >= 2;
+    if (!ok) console.error("vt-tweaks 項目缺 id／label／options", c);
+    else if (!c.hint)
+      console.error(
+        "vt-tweaks 項目缺 hint（要寫這項會改到頁面上的什麼）",
+        c.id,
+      );
+    return ok;
+  });
+  if (content.length > 3) {
+    console.error("vt-tweaks 最多 3 項，多的不顯示");
+    content = content.slice(0, 3);
+  }
+  content.forEach(function (c) {
+    c.attr = "data-tw-" + c.id;
+    c.def = String(c.options[0][0]);
+  });
+  var ALL = FIXED.concat(content);
+  var saved = false; // 按過「存成我的預設」（只在有拍板摘要的頁用得到）
+  var state = {};
+  ALL.forEach(function (t) {
+    state[t.id] = t.def;
+  });
+
+  function label(t, v) {
+    if (t.kind === "range") return Math.round(parseFloat(v) * 100) + "%";
+    for (var i = 0; i < t.options.length; i++)
+      if (String(t.options[i][0]) === v) return txt(t.options[i][1]);
+    return v;
+  }
+  function apply(t) {
+    if (t.css) root.style.setProperty(t.css, state[t.id]);
+    if (t.attr) root.setAttribute(t.attr, state[t.id]);
+    if (t.id === "fs") root.classList.toggle("vt-fs", parseFloat(state.fs) !== 1);
+  }
+  function el(tag, cls, text) {
+    var e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+  // 切換語言時要重寫的文字：登記時先畫一次，切換時全部重跑
+  var paint = [];
+  function painted(fn) {
+    paint.push(fn);
+    fn();
+  }
+
+  var launch = el("button", "vt-tw-launch vt-tw-root");
+  launch.type = "button";
+  launch.setAttribute("aria-expanded", "false");
+  launch.innerHTML =
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><line x1="21" y1="4" x2="14" y2="4"/><line x1="10" y1="4" x2="3" y2="4"/><line x1="21" y1="12" x2="12" y2="12"/><line x1="8" y1="12" x2="3" y2="12"/><line x1="21" y1="20" x2="16" y2="20"/><line x1="12" y1="20" x2="3" y2="20"/><line x1="14" y1="2" x2="14" y2="6"/><line x1="8" y1="10" x2="8" y2="14"/><line x1="16" y1="18" x2="16" y2="22"/></svg>';
+  var lbl = launch.appendChild(el("span", "vt-tw-lbl"));
+  var pop = el("aside", "vt-tw-pop vt-tw-root");
+  pop.hidden = true;
+  painted(function () {
+    launch.setAttribute("aria-label", L.name);
+    launch.title = L.title;
+    lbl.textContent = L.short;
+    pop.setAttribute("aria-label", L.name);
+  });
+
+  function control(t) {
+    var wrap = el("div", "vt-tw-item");
+    var lab = el("div", "vt-tw-label");
+    var name = lab.appendChild(el("span"));
+    var val = el("span", "vt-tw-val");
+    lab.appendChild(val);
+    wrap.appendChild(lab);
+    function sync() {
+      val.textContent = label(t, state[t.id]);
+    }
+    if (t.kind === "range") {
+      var r = el("input");
+      r.type = "range";
+      r.min = t.min;
+      r.max = t.max;
+      r.step = t.step;
+      r.value = state[t.id];
+      r.addEventListener("input", function () {
+        state[t.id] = r.value;
+        apply(t);
+        sync();
+        refreshSave();
+      });
+      wrap.appendChild(r);
+      t.reset = function () {
+        r.value = t.def;
+      };
+    } else {
+      var seg = el("div", "vt-tw-seg");
+      t.options.forEach(function (o) {
+        var b = el("button");
+        b.type = "button";
+        painted(function () {
+          b.textContent = txt(o[1]);
+        });
+        b.setAttribute("data-v", String(o[0]));
+        b.addEventListener("click", function () {
+          state[t.id] = String(o[0]);
+          apply(t);
+          mark();
+          sync();
+          refreshSave();
+        });
+        seg.appendChild(b);
+      });
+      function mark() {
+        seg.querySelectorAll("button").forEach(function (b) {
+          b.classList.toggle(
+            "vt-tw-on",
+            b.getAttribute("data-v") === state[t.id],
+          );
+        });
+      }
+      mark();
+      t.reset = mark;
+      wrap.appendChild(seg);
+    }
+    if (t.hint) wrap.appendChild(el("div", "vt-tw-hint", t.hint));
+    t.sync = sync;
+    painted(function () {
+      name.textContent = txt(t.label);
+      if (r) r.setAttribute("aria-label", txt(t.label));
+      sync();
+    });
+    return wrap;
+  }
+  var first = pop.appendChild(el("div", "vt-tw-sec vt-tw-first"));
+  var firstText = first.appendChild(el("span"));
+  var langBtn = first.appendChild(el("button", "vt-tw-lang"));
+  langBtn.type = "button";
+  painted(function () {
+    firstText.textContent = L.fixed;
+    langBtn.textContent = L.swap;
+  });
+  FIXED.forEach(function (t) {
+    pop.appendChild(control(t));
+  });
+  if (content.length) {
+    var sec = pop.appendChild(el("div", "vt-tw-sec"));
+    painted(function () {
+      sec.textContent = L.content;
+    });
+    content.forEach(function (t) {
+      pop.appendChild(control(t));
+    });
+  }
+  var actions = el("div", "vt-tw-actions");
+  var resetBtn = el("button");
+  resetBtn.type = "button";
+  painted(function () {
+    resetBtn.textContent = L.reset;
+  });
+  var saveBtn = el("button", "vt-tw-pri");
+  saveBtn.type = "button";
+  actions.appendChild(resetBtn);
+  actions.appendChild(saveBtn);
+  pop.appendChild(actions);
+  var saveHint = el("div", "vt-tw-hint");
+  pop.appendChild(saveHint);
+  // 複製不到時的出路：指令放進這裡並全選，使用者按 Cmd+C（純展示頁沒有頁面自帶的複製函式）
+  var manual = el("textarea", "vt-tw-manual");
+  manual.readOnly = true;
+  manual.rows = 4;
+  manual.hidden = true;
+  pop.appendChild(manual);
+  var flashTimer = null;
+
+  function changedFixed() {
+    return FIXED.filter(function (t) {
+      return state[t.id] !== t.def;
+    });
+  }
+  function profileValue(t, v) {
+    if (t.options) {
+      for (var i = 0; i < t.options.length; i++)
+        if (String(t.options[i][0]) === v) return t.options[i][2];
+    }
+    return String(Math.round(parseFloat(v) * 100) / 100);
+  }
+  function hasSummary() {
+    return typeof window.vtBuildDecisionExport === "function";
+  }
+  function saveText(ch) {
+    return (
+      L.head +
+      ch
+        .map(function (t) {
+          return txt(t.label) + L.pair + label(t, state[t.id]);
+        })
+        .join(L.join) +
+      L.tail +
+      // 雙引號：路徑以 $HOME 開頭，單引號裡不會展開
+      'python3 "' +
+      tool +
+      '" set ' +
+      ch
+        .map(function (t) {
+          return t.profile + "=" + profileValue(t, state[t.id]);
+        })
+        .join(" ")
+    );
+  }
+  function refreshSave() {
+    var n = changedFixed().length;
+    // 只看目前的值：拖滑桿途中經過預設值那一格不該把已存取消
+    var on = saved && n > 0;
+    // 失敗時留下的文字框：設定一變，裡面的指令就過時了
+    if (!manual.hidden && manual.value !== saveText(changedFixed())) manual.hidden = true;
+    saveBtn.disabled = !n;
+    if (hasSummary()) saveBtn.setAttribute("aria-pressed", String(on));
+    saveBtn.textContent = on ? L.added : L.save;
+    saveHint.textContent = !n
+      ? L.need(FIXED.map(function (t) {
+          return txt(t.label);
+        }))
+      : on
+        ? L.undo
+        : hasSummary()
+        ? L.toSummary
+        : L.toCopy;
+  }
+  window.vtCollectTweaks = function () {
+    var ch = changedFixed();
+    return saved && ch.length ? "\n\n" + saveText(ch) : "";
+  };
+  resetBtn.addEventListener("click", function () {
+    saved = false;
+    ALL.forEach(function (t) {
+      state[t.id] = t.def;
+      apply(t);
+      t.reset();
+      t.sync();
+    });
+    refreshSave();
+  });
+  saveBtn.addEventListener("click", async function () {
+    if (hasSummary()) {
+      saved = !saved;
+      refreshSave();
+      return;
+    }
+    // 沒有拍板摘要的頁：按鈕本身就是出口，直接複製
+    var text = saveText(changedFixed());
+    var ok = false;
+    manual.hidden = true;
+    if (window.vtCopyText) ok = await window.vtCopyText(text);
+    // 沒有頁面的複製函式就直接走下面：在點擊當下同步複製，不先 await 別的 API 把使用者手勢耗掉
+    if (!ok) {
+      manual.value = text;
+      manual.hidden = false;
+      manual.select();
+      try {
+        ok = document.execCommand("copy");
+      } catch (e) {}
+      if (ok) manual.hidden = true;
+    }
+    saveBtn.textContent = ok ? L.copied : L.select;
+    clearTimeout(flashTimer); // 連點時舊計時器不能提早蓋掉新回饋
+    flashTimer = setTimeout(refreshSave, ok ? 2000 : 6000);
+  });
+  // 面板開在按鈕上方：按鈕在右半就右緣對齊、左半就左緣對齊；
+  // 按鈕上方不到 200px（視窗矮、底部列展開）就改貼畫面頂端，不讓面板頂端跑出畫面
+  function place() {
+    var r = launch.getBoundingClientRect();
+    var w = Math.min(330, window.innerWidth * 0.92);
+    var x = r.left + r.width / 2 > window.innerWidth / 2 ? r.right - w : r.left;
+    // 預覽鈕在列中間時（非範本的列）對齊邊緣會出界，夾回畫面內
+    pop.style.left = Math.max(8, Math.min(x, window.innerWidth - w - 8)) + "px";
+    var low = r.top - 24 < 200;
+    pop.style.top = low ? "12px" : "auto";
+    pop.style.bottom = low ? "auto" : window.innerHeight - r.top + 10 + "px";
+    pop.style.maxHeight = (low ? window.innerHeight - 24 : r.top - 24) + "px";
+  }
+  langBtn.addEventListener("click", function () {
+    lang = lang === "zh" ? "en" : "zh";
+    L = LANG[lang];
+    try {
+      localStorage.setItem("vt-tw-lang", lang);
+    } catch (e) {}
+    paint.forEach(function (f) {
+      f();
+    });
+    refreshSave();
+  });
+  function setOpen(open) {
+    if (open) place();
+    pop.hidden = !open;
+    launch.setAttribute("aria-expanded", String(open));
+  }
+  launch.addEventListener("click", function () {
+    setOpen(pop.hidden);
+  });
+  document.addEventListener("keydown", function (ev) {
+    if (ev.key === "Escape" && !pop.hidden) setOpen(false);
+  });
+  document.addEventListener("click", function (ev) {
+    // 用事件當下的路徑判斷（按鈕若在點擊後被重畫移除，closest 會找不到而誤關）
+    var inside = ev.composedPath().some(function (el) {
+      return el.classList && el.classList.contains("vt-tw-root");
+    });
+    if (!pop.hidden && !inside) setOpen(false);
+  });
+  // 把「設定檔變更」段接進評論收集函式：所有複製摘要都已經照規定拼接它，不必逐一改寫
+  function hook() {
+    var orig = window.vtCollectComments;
+    window.vtCollectComments = function () {
+      return window.vtCollectTweaks() + (orig ? orig() : "");
+    };
+  }
+  if (document.readyState === "loading")
+    document.addEventListener("DOMContentLoaded", hook);
+  else hook();
+  // querySelector：頁面沒有預覽鈕是正常的，不該讓 verify 的元素參照檢查報缺漏（同上方 vt-tweaks 的寫法）
+  var dock = document.querySelector("#preview-btn");
+  document.body.appendChild(pop);
+  if (dock) {
+    launch.classList.add("vt-tw-docked");
+    dock.parentNode.insertBefore(launch, dock);
+  } else document.body.insertBefore(launch, pop); // Tab 順序：按鈕→面板
+  // 縮放、捲動時按鈕會跟著列移動（捲到頁尾，列會被頁尾往上推），開著的面板要跟著對齊
+  function follow() {
+    if (!pop.hidden) place();
+  }
+  window.addEventListener("resize", follow);
+  window.addEventListener("scroll", follow, { passive: true });
+  refreshSave();
+})();
+
+</script>
+<!-- vt-tweaks:end -->
+</body>
+</html>

@@ -14,6 +14,7 @@ Cyclone 的 **素材圖解專區**：把外部來源（開源 repo、文件、�
 | Slug | 主題 | 頁面 |
 | --- | --- | --- |
 | `illustrated-guide-to-ai-agents` | Newsletter《A Visual Guide to LLM Agents》↔ HandsOnLLM TinyAgent repo | [open](https://cyclone-tw.github.io/explainer-hub/analyses/illustrated-guide-to-ai-agents/) |
+| `two-week-orca-relay-worktree` | 兩週分享：ORCA 手機 Relay、worktree／workspace、Pi 與 Jev | [open](https://cyclone-tw.github.io/explainer-hub/analyses/two-week-orca-relay-worktree/) |
 
 ## 目錄慣例
 
