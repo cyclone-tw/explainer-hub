@@ -8,4 +8,4 @@ After the first push, enable Pages in repo settings if automation did not:
 2. Source: Deploy from a branch
 3. Branch: `main` / folder: `/docs`
 
-Hub URL: https://cyclone-tw.github.io/github-analyzation/
+Hub URL: https://cyclone-tw.github.io/explainer-hub/
