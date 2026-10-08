@@ -5,6 +5,7 @@ Cyclone 的 **素材圖解專區**：把外部來源（開源 repo、文件、�
 不限 GitHub——任何值得對照／拆解的公開素材都可以進這裡。
 
 - **Hub**: https://cyclone-tw.github.io/explainer-hub/
+- **Hub（Cloudflare）**: https://explainer-hub.cyclonetw.dev/ ，merge 到 main 由 `.github/workflows/deploy.yml` 自動部署
 - **Issue tracker**: https://github.com/cyclone-tw/explainer-hub/issues
 
 > 舊名 `github-analyzation` 已更名；GitHub 會把舊 URL redirect 過來。
